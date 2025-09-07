@@ -7,7 +7,7 @@ export function getMcpClient(): MCPClient {
 
   const url = process.env.PERPLEXITY_MCP_URL || process.env.MCP_PERPLEXITY_URL;
   const command = process.env.PERPLEXITY_MCP_COMMAND || "npx";
-  const args = (process.env.PERPLEXITY_MCP_ARGS && JSON.parse(process.env.PERPLEXITY_MCP_ARGS)) || ["-y", "perplexity-mcp-server"]; // falls back to npx perplexity-mcp-server
+  const args = (process.env.PERPLEXITY_MCP_ARGS && JSON.parse(process.env.PERPLEXITY_MCP_ARGS)) || ["-y", "server-perplexity-ask"]; // falls back to npx server-perplexity-ask
 
   const servers: any = {};
   if (url) {
