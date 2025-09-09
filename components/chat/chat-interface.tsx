@@ -12,6 +12,7 @@ import { ChatSidebar } from './chat-sidebar';
 import { TypingIndicator } from '../ui/typing-indicator';
 import { ChatInterfaceProps } from '../../types/schema';
 import { MessageType, MessageStatus, ChatStatus } from '../../types/enums';
+import { ResearchService } from '../../lib/research-service';
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   initialMessages, 
@@ -22,8 +23,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [messages, setMessages] = useState(initialMessages);
   const [chatStatus, setChatStatus] = useState(currentChatStatus);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>('chat-1');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [deepResearchMode, setDeepResearchMode] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -67,29 +69,74 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setChatStatus(ChatStatus.THINKING);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const aiResponses = [
-        "That's a fascinating question! Let me research that for you. Based on current data and recent studies, here's what I've found:\n\n## Key Findings\n\n• **Primary research** indicates significant developments in this area\n• **Recent studies** show promising results with `95% accuracy`\n• **Industry applications** are expanding rapidly\n\n> **Note**: This analysis is based on the latest available data from peer-reviewed sources.\n\nWould you like me to dive deeper into any specific aspect?",
-        "I'd be happy to help you explore that topic! Here are some key insights:\n\n### Current State\n\n• **Market trends** show exponential growth\n• **Technical challenges** are being addressed through innovative approaches\n• **Future outlook** remains highly optimistic\n\n```\nKey Metrics:\n- Growth Rate: 45% YoY\n- Market Size: $2.3B\n- Adoption Rate: 78%\n```\n\nWhat specific area would you like to explore further?",
-        "Excellent point! This is an area with significant recent developments:\n\n## Recent Breakthroughs\n\n🔬 **Research Advances**: New methodologies showing **breakthrough results**\n\n📊 **Data Analysis**: Comprehensive studies reveal important patterns\n\n🚀 **Innovation**: Cutting-edge solutions emerging from top institutions\n\n> The field is evolving rapidly with new discoveries published weekly.\n\nShall I provide more detailed analysis on any particular aspect?",
-        "That's a complex topic with multiple perspectives. Here's a comprehensive analysis:\n\n### Different Viewpoints\n\n1. **Academic Perspective**: Focus on theoretical foundations\n2. **Industry Perspective**: Emphasis on practical applications\n3. **Regulatory Perspective**: Concerns about compliance and ethics\n\n**Consensus Areas:**\n• Need for standardization\n• Importance of ethical considerations\n• Potential for significant impact\n\nWould you like me to elaborate on any specific perspective?",
-        "Great question! I've analyzed recent publications and data sources:\n\n## Research Summary\n\n📚 **Literature Review**: 150+ papers analyzed from top-tier journals\n\n📈 **Trend Analysis**: Clear patterns emerging in the data\n\n🎯 **Key Insights**:\n• **Methodology improvements** leading to better outcomes\n• **Cross-disciplinary collaboration** driving innovation\n• **Real-world applications** showing measurable impact\n\n```markdown\n# Quick Stats\n- Papers reviewed: 150+\n- Time period: Last 24 months\n- Confidence level: High\n```\n\nWhat specific aspect interests you most?"
-      ];
-
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+    // Generate AI response using research service if in deep research mode
+    console.log('Deep research mode:', deepResearchMode);
+    console.log('NEXT_PUBLIC_PERPLEXITY_API_KEY available:', !!process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY);
+    console.log('Environment variables:', process.env);
+    
+    if (deepResearchMode && process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY) {
+      console.log('Using research service for query:', content);
       
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        content: randomResponse,
-        type: MessageType.AI,
-        timestamp: new Date(),
-        status: MessageStatus.DELIVERED
-      };
+      try {
+        const aiResponse = await ResearchService.generateResearchMessage(content);
+        
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: aiResponse,
+          type: MessageType.AI,
+          timestamp: new Date(),
+          status: MessageStatus.DELIVERED
+        };
 
-      setMessages(prev => [...prev, aiMessage]);
-      setChatStatus(ChatStatus.IDLE);
-    }, 2000);
+        setMessages(prev => [...prev, aiMessage]);
+        setChatStatus(ChatStatus.IDLE);
+      } catch (error) {
+        console.error('Research service error:', error);
+        
+        // Fallback to mock responses if research service fails
+        const aiResponses = [
+          "I apologize, but I'm currently unable to access real-time research data. Here's a general response based on my knowledge:\n\n## Research Insights\n\n• **Key Finding 1**: General information about the topic\n• **Key Finding 2**: Additional context and background\n• **Key Finding 3**: Related areas of interest\n\n> **Note**: For the most current research, please ensure your API keys are properly configured.\n\nWould you like me to approach this from a different angle?",
+          "I'm experiencing difficulties accessing the research databases right now. However, I can provide some foundational knowledge:\n\n### Background Information\n\n• **Historical Context**: How this field has evolved\n• **Current Understanding**: What we know today\n• **Future Directions**: Where research is heading\n\n```\nResearch Limitations:\n- Real-time data access currently unavailable\n- Response based on general knowledge\n- Please check API configuration\n```\n\nWhat specific aspect would you like me to focus on despite these limitations?"
+        ];
+
+        const fallbackResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+        
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: fallbackResponse,
+          type: MessageType.AI,
+          timestamp: new Date(),
+          status: MessageStatus.DELIVERED
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+        setChatStatus(ChatStatus.IDLE);
+      }
+    } else {
+      // Simulate AI response delay
+      setTimeout(() => {
+        const aiResponses = [
+          "That's a fascinating question! Let me research that for you. Based on current data and recent studies, here's what I've found:\n\n## Key Findings\n\n• **Primary research** indicates significant developments in this area\n• **Recent studies** show promising results with `95% accuracy`\n• **Industry applications** are expanding rapidly\n\n> **Note**: This analysis is based on the latest available data from peer-reviewed sources.\n\nWould you like me to dive deeper into any specific aspect?",
+          "I'd be happy to help you explore that topic! Here are some key insights:\n\n### Current State\n\n• **Market trends** show exponential growth\n• **Technical challenges** are being addressed through innovative approaches\n• **Future outlook** remains highly optimistic\n\n```\nKey Metrics:\n- Growth Rate: 45% YoY\n- Market Size: $2.3B\n- Adoption Rate: 78%\n```\n\nWhat specific area would you like to explore further?",
+          "Excellent point! This is an area with significant recent developments:\n\n## Recent Breakthroughs\n\n🔬 **Research Advances**: New methodologies showing **breakthrough results**\n\n📊 **Data Analysis**: Comprehensive studies reveal important patterns\n\n🚀 **Innovation**: Cutting-edge solutions emerging from top institutions\n\n> The field is evolving rapidly with new discoveries published weekly.\n\nShall I provide more detailed analysis on any particular aspect?",
+          "That's a complex topic with multiple perspectives. Here's a comprehensive analysis:\n\n### Different Viewpoints\n\n1. **Academic Perspective**: Focus on theoretical foundations\n2. **Industry Perspective**: Emphasis on practical applications\n3. **Regulatory Perspective**: Concerns about compliance and ethics\n\n**Consensus Areas:**\n• Need for standardization\n• Importance of ethical considerations\n• Potential for significant impact\n\nWould you like me to elaborate on any specific perspective?",
+          "Great question! I've analyzed recent publications and data sources:\n\n## Research Summary\n\n📚 **Literature Review**: 150+ papers analyzed from top-tier journals\n\n📈 **Trend Analysis**: Clear patterns emerging in the data\n\n🎯 **Key Insights**:\n• **Methodology improvements** leading to better outcomes\n• **Cross-disciplinary collaboration** driving innovation\n• **Real-world applications** showing measurable impact\n\n```markdown\n# Quick Stats\n- Papers reviewed: 150+\n- Time period: Last 24 months\n- Confidence level: High\n```\n\nWhat specific aspect interests you most?"
+        ];
+
+        const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+        
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          content: randomResponse,
+          type: MessageType.AI,
+          timestamp: new Date(),
+          status: MessageStatus.DELIVERED
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+        setChatStatus(ChatStatus.IDLE);
+      }, 2000);
+    }
   };
 
   const handleSessionSelect = (sessionId: string) => {

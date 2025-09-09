@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Research Assistant AI with Mastra Integration
+
 ## Getting Started
 
 First, run the development server:
@@ -34,3 +36,18 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deep Research Mode
+
+This application integrates with Perplexity AI through Mastra MCP to provide deep research capabilities. To enable this feature:
+
+1. Create a `.env.local` file in the root directory
+2. Add your Perplexity API key:
+
+```
+PERPLEXITY_API_KEY=your_actual_api_key_here
+```
+
+3. The deep research mode is enabled by default. When enabled, all chat responses will be generated using real-time research data from Perplexity AI.
+
+If you don't have a Perplexity API key, you can sign up at [perplexity.ai](https://www.perplexity.ai) and get one from your account settings.
