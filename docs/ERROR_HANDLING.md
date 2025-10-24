@@ -30,7 +30,7 @@ if (typeof window === 'undefined') {
             'server-perplexity-ask'
           ],
           env: {
-            PERPLEXITY_API_KEY: process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY || ''
+            PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || ''
           }
         }
       }
@@ -181,9 +181,9 @@ In `components/chat/chat-interface.tsx`, error handling with fallback to mock re
 ```typescript
 // Generate AI response using research service if in deep research mode
 console.log('Deep research mode:', deepResearchMode);
-console.log('NEXT_PUBLIC_PERPLEXITY_API_KEY available:', !!process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY);
+console.log('PERPLEXITY_API_KEY available:', !!process.env.PERPLEXITY_API_KEY);
 
-if (deepResearchMode && process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY) {
+if (deepResearchMode && process.env.PERPLEXITY_API_KEY) {
   console.log('Using research service for query:', content);
   
   try {

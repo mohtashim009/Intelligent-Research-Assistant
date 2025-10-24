@@ -25,7 +25,7 @@ if (typeof window === 'undefined') {
             'server-perplexity-ask'
           ],
           env: {
-            PERPLEXITY_API_KEY: process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY || ''
+            PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || ''
           }
         }
       }

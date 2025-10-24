@@ -71,10 +71,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     // Generate AI response using research service if in deep research mode
     console.log('Deep research mode:', deepResearchMode);
-    console.log('NEXT_PUBLIC_PERPLEXITY_API_KEY available:', !!process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY);
+    console.log('PERPLEXITY_API_KEY available:', !!process.env.PERPLEXITY_API_KEY);
     console.log('Environment variables:', process.env);
     
-    if (deepResearchMode && process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY) {
+    if (deepResearchMode && process.env.PERPLEXITY_API_KEY) {
       console.log('Using research service for query:', content);
       
       try {
