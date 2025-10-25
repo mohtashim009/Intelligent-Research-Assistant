@@ -1,19 +1,23 @@
-import { MCPClient } from '@mastra/mcp';
+// import { MCPClient } from '@mastra/mcp';
 import { Agent } from '@mastra/core/agent';
 import { google } from '@ai-sdk/google';
 import { serpApiTools } from './serpapi-tool';
-// import { createMastraTools } from '@agentic/mastra'
-// import { AgenticToolClient } from '@agentic/platform-tool-client'
+import { perplexityTools } from './perplexity-direct';
 
-export interface MCPConfig {
-  command?: string;
-  args?: string[];
-  env?: Record<string, string>;
-  url?: string;
-}
+// MCP is commented out because:
+// 1. Direct Perplexity API tools work everywhere (including serverless like Vercel)
+// 2. MCP requires npm install at runtime (not possible in serverless)
+// 3. MCP requires long-running processes (not supported in serverless)
+// 4. Direct API calls are faster and more reliable
 
-// Create MCP client with error handling for browser environment
-let mcp: MCPClient | null = null;
+// export interface MCPConfig {
+//   command?: string;
+//   args?: string[];
+//   env?: Record<string, string>;
+//   url?: string;
+// }
+
+// let mcp: MCPClient | null = null;
 let researchAgent: Agent | null = null;
 let isInitializing = false;
 let initializationPromise: Promise<void> | null = null;
@@ -46,52 +50,36 @@ async function initializeMCP() {
   isInitializing = true;
   initializationPromise = (async () => {
     try {
-      console.log('🚀 Initializing MCP client...');
+      console.log('🚀 Initializing research agent...');
 
-      mcp = new MCPClient({
-        servers: {
-          'perplexity': {
-            command: 'npx',
-            args: [
-              '-y',
-              '@perplexity-ai/mcp-server' // 'server-perplexity-ask'
-            ],
-            env: {
-              PERPLEXITY_API_KEY: process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY || process.env.PERPLEXITY_API_KEY || '',
-              PERPLEXITY_TIMEOUT_MS: "600000",
-            }
-          },
-          // 'serp-api': {
-          //   command: 'npx',
-          //   args: [
-          //     '-y',
-          //     'mcp-remote',
-          //     'https://gateway.agentic.so/@agentic/serpapi/mcp'
-          //   ]
-          // }
-        }
-      });
-
-      // Wait for the MCP client to initialize properly
-      console.log('⏳ Waiting for MCP server to start...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // SerpApi Tool
-      // const serpApiTool = await AgenticToolClient.fromIdentifier('@agentic/serpapi')
-
-      // Get MCP tools
-      console.log('� Fetchoing MCP tools...');
-      const mcpTools = mcp ? await mcp.getTools() : {};
+      // MCP initialization commented out - using direct API calls instead
+      // MCP doesn't work in serverless environments (Vercel, Netlify, etc.)
+      // try {
+      //   console.log('   Attempting MCP client initialization...');
+      //   mcp = new MCPClient({
+      //     servers: {
+      //       'perplexity': {
+      //         command: 'npx',
+      //         args: ['-y', '@perplexity-ai/mcp-server'],
+      //         env: {
+      //           PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || '',
+      //           PERPLEXITY_TIMEOUT_MS: "600000",
+      //         }
+      //       },
+      //     }
+      //   });
+      //   await new Promise(resolve => setTimeout(resolve, 3000));
+      //   console.log('   ✅ MCP client initialized');
+      // } catch (mcpError) {
+      //   console.warn('   ⚠️  MCP client initialization failed');
+      //   mcp = null;
+      // }
 
       // Log available tools for debugging
-      console.log('✅ MCP Tools loaded:', Object.keys(mcpTools));
+      console.log('✅ Perplexity Tools loaded:', Object.keys(perplexityTools));
       console.log('✅ SerpAPI Tools loaded:', Object.keys(serpApiTools));
 
-      if (Object.keys(mcpTools).length === 0) {
-        console.warn('⚠️  Warning: No MCP tools were loaded. The Perplexity MCP server may not have started correctly.');
-      }
-
-      // Create agent with both MCP tools and SerpAPI tools
+      // Create agent with Perplexity Direct API and SerpAPI tools
       researchAgent = new Agent({
         name: 'Deep Research Assistant',
         instructions: `You are an advanced AI Deep Research Assistant, similar to Google Deep Research.
@@ -113,11 +101,13 @@ async function initializeMCP() {
    - Note conflicting information and different perspectives
 
 3. **Deep Analysis Requirements**
-   - For academic topics: Use googleScholar extensively (multiple searches with different keywords)
-   - For current events: Combine googleNews + googleSearch
-   - For products/services: Use googleShopping + googleSearch + reviews
-   - For local information: Use googleMaps + googleSearch
-   - For technical topics: Use googleSearch + youtubeSearch (tutorials) + googleScholar (papers)
+   - For ALL topics: Start with perplexity_search or perplexity_research for real-time, cited information
+   - For academic topics: perplexity_research + googleScholar (multiple searches with different keywords)
+   - For current events: perplexity_search + googleNews + googleSearch
+   - For products/services: perplexity_search + googleShopping + googleSearch + reviews
+   - For local information: perplexity_search + googleMaps + googleSearch
+   - For technical topics: perplexity_research + googleSearch + youtubeSearch (tutorials) + googleScholar (papers)
+   - For reasoning/analysis: perplexity_reason + supporting research tools
 
 4. **Report Generation**
    - Create comprehensive, well-structured reports
@@ -144,36 +134,46 @@ async function initializeMCP() {
 
 ## Available Tools:
 
-**Primary Research Tools:**
+**Perplexity AI Tools (Real-time Web Search with Citations):**
+- perplexity_search: Direct web search using Perplexity AI with real-time information and citations
+- perplexity_research: In-depth research using Perplexity AI for complex questions requiring detailed analysis
+- perplexity_reason: Complex reasoning and analysis tasks requiring logical thinking
+
+**Primary Search Tools:**
 - googleSearch: General web search - use for overview and broad information
 - googleScholar: Academic papers - use for scholarly research and citations
 - googleNews: Recent news - use for current events and developments
-- perplexity_perplexity_search: direct web search using the Perplexity Search API
-- perplexity_perplexity_ask: for general queries
-- perplexity_perplexity_research: for in-depth deep research
 
-**Specialized Tools:**
+**Specialized Search Tools:**
 - googleShopping: Product research and pricing
 - youtubeSearch: Video content and tutorials
 - googleMaps: Local businesses and places
 - googleJobs: Job market research
 - googleImages: Visual research
-- perplexity_perplexity_reason: for reasoning task
 
 **Alternative Search Engines:**
-- bingSearch, duckduckgoSearch: Cross-verification
-- baiduSearch: Chinese language content
-- yandexSearch: Russian language content
+- bingSearch: Bing web search for cross-verification
+- duckduckgoSearch: Privacy-focused search for cross-verification
+- baiduSearch: Chinese language content and China-specific information
+- yandexSearch: Russian language content and Russia-specific information
 
 ## Research Workflow:
 
-1. Understand the query and identify key aspects
-2. Plan which tools to use (minimum 3 different tools)
-3. Execute multiple searches with varied keywords
-4. Analyze and synthesize findings
-5. Cross-reference information
-6. Generate comprehensive report with citations
-7. Review for completeness and accuracy
+1. **Understand the query** and identify key aspects
+2. **Start with Perplexity tools** for real-time information:
+   - Use perplexity_search for quick, cited answers
+   - Use perplexity_research for in-depth analysis
+   - Use perplexity_reason for complex logical problems
+3. **Supplement with specialized tools** (minimum 3-5 different tools total):
+   - googleScholar for academic credibility
+   - googleNews for recent developments
+   - googleSearch for additional context
+   - Specialized tools as needed (Shopping, Maps, YouTube, etc.)
+4. **Execute multiple searches** with varied keywords
+5. **Analyze and synthesize** findings from all sources
+6. **Cross-reference information** across different tools
+7. **Generate comprehensive report** with citations from all sources
+8. **Review for completeness** and accuracy
 
 ## Output Format:
 
@@ -209,16 +209,15 @@ async function initializeMCP() {
 Remember: Quality over speed. Thorough research with multiple sources is essential.`,
         model: google('gemini-2.5-flash'),
         tools: {
-          ...mcpTools,
-          ...serpApiTools,
+          ...perplexityTools,    // Direct Perplexity API (always available)
+          ...serpApiTools,       // SerpAPI tools (always available)
         }
       });
 
       console.log('✅ Research agent initialized successfully');
     } catch (error) {
-      console.error('❌ MCP client or agent initialization failed:', error);
+      console.error('❌ Research agent initialization failed:', error);
       console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
-      mcp = null;
       researchAgent = null;
     } finally {
       isInitializing = false;
