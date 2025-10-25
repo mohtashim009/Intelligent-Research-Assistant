@@ -6,11 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Square2StackIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { Square2StackIcon, EllipsisHorizontalIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { MessageBubbleProps } from '../../types/schema';
 import { formatTimestamp } from '../../utils/formatters';
 import { MessageType } from '../../types/enums';
 import { MarkdownRenderer } from '../ui/markdown-renderer';
+import { exportToPDF, exportToHTML, exportToMarkdown } from '@/lib/export-utils';
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
   message, 
@@ -21,6 +22,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
     onCopy?.();
+  };
+
+  const handleExportMessage = async (format: 'pdf' | 'html' | 'markdown') => {
+    try {
+      const messageTitle = `Message_${message.id}`;
+      switch (format) {
+        case 'pdf':
+          await exportToPDF([message], messageTitle);
+          break;
+        case 'html':
+          await exportToHTML([message], messageTitle);
+          break;
+        case 'markdown':
+          await exportToMarkdown([message], messageTitle);
+          break;
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
   };
 
   return (
@@ -84,11 +104,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   <Square2StackIcon className="h-4 w-4 mr-2" />
                   Copy message
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Export conversation
+                <DropdownMenuItem onClick={() => handleExportMessage('pdf')}>
+                  <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                  Export as PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">
-                  Delete message
+                <DropdownMenuItem onClick={() => handleExportMessage('html')}>
+                  <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                  Export as HTML
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportMessage('markdown')}>
+                  <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                  Export as Markdown
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

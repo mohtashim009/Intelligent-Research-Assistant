@@ -10,6 +10,7 @@ import { MessageBubble } from './message-bubble';
 import { MessageInput } from './message-input';
 import { ChatSidebar } from './chat-sidebar';
 import { TypingIndicator } from '../ui/typing-indicator';
+import { ExportButton } from '../ui/export-button';
 import { ChatInterfaceProps } from '../../types/schema';
 import { MessageType, MessageStatus, ChatStatus } from '../../types/enums';
 import { ResearchService } from '../../lib/research-service';
@@ -71,10 +72,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     // Generate AI response using research service if in deep research mode
     console.log('Deep research mode:', deepResearchMode);
-    console.log('PERPLEXITY_API_KEY available:', !!process.env.PERPLEXITY_API_KEY);
-    console.log('Environment variables:', process.env);
     
-    if (deepResearchMode && process.env.PERPLEXITY_API_KEY) {
+    if (deepResearchMode) {
       console.log('Using research service for query:', content);
       
       try {
@@ -210,6 +209,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               How can I help you with your research today?
             </p>
           </div>
+          
+          <ExportButton 
+            messages={messages} 
+            conversationTitle="Research Report"
+          />
         </Card>
 
         {/* Messages Area */}
