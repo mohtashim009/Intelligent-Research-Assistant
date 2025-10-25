@@ -30,8 +30,9 @@ async function initializeMCP() {
     return;
   }
 
-  // Skip during build/static generation
-  if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_INIT) {
+  // Skip during build/static generation (Next.js sets this during build)
+  // In production runtime, this will be undefined, so initialization will proceed
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
     console.log('⏭️  Skipping MCP initialization during build');
     return;
   }
