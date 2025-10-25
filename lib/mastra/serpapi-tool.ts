@@ -1,12 +1,24 @@
 import { createTool } from '@mastra/core';
 import { z } from 'zod';
 
-const SERPAPI_KEY = process.env.SERPAPI_KEY || '';
+// Get API key at runtime (not at module load time)
+function getSerpApiKey(): string {
+  const apiKey = process.env.SERPAPI_KEY || '';
+  
+  if (!apiKey) {
+    console.error('❌ SERPAPI_KEY not found in environment variables');
+    throw new Error('SERPAPI_KEY is required but not set');
+  }
+  
+  return apiKey;
+}
 
 // Helper function to make SerpAPI requests
 async function serpApiRequest(params: Record<string, any>) {
+  const apiKey = getSerpApiKey(); // Get key at runtime
+  
   const url = new URL('https://serpapi.com/search');
-  url.searchParams.append('api_key', SERPAPI_KEY);
+  url.searchParams.append('api_key', apiKey);
   
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {

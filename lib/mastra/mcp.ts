@@ -248,7 +248,7 @@ export async function generateResearchMessage(query: string): Promise<string> {
     console.log('─'.repeat(80));
 
     // Use the agent to generate a comprehensive response
-    const result = await researchAgent.generateVNext(query, {
+    const result = await researchAgent.generate(query, {
       onStepFinish: (step) => {
         // Log tool calls
         if (step.toolCalls && step.toolCalls.length > 0) {
