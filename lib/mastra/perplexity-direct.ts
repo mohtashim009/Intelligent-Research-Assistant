@@ -1,6 +1,10 @@
 import { createTool } from '@mastra/core';
 import { z } from 'zod';
 
+if (!!process.env.PERPLEXITY_API_KEY) {
+    console.error('PERPLEXITY_API_KEY not found');
+}
+
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY || '';
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
