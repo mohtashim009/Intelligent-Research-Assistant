@@ -22,8 +22,8 @@ function initMastra(): Mastra {
   if (!mastraInstance) {
     // Check if running on Vercel
     const isVercel = process.env.VERCEL === '1';
-    const connectionUrl = isVercel 
-      ? process.env.TURSO_DATABASE_URL 
+    const connectionUrl = isVercel
+      ? process.env.TURSO_DATABASE_URL
       : 'file:./mastra-memory.db';
 
     // Only create storage and vectors if we have a valid connection

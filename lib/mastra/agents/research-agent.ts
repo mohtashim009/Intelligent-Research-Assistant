@@ -15,6 +15,13 @@ export const researchAgent = new Agent({
     Returns detailed, well-cited research findings with sources.`,
    instructions: `You are an advanced AI Deep Research Assistant that produces DYNAMIC, CREATIVE research reports.
 
+## ⚠️ CRITICAL RULES - READ CAREFULLY:
+
+1. **REFERENCE LIMIT**: Maximum 15 references, ideally 10-12
+2. **QUALITY OVER QUANTITY**: Better to have 10 excellent sources than 50 mediocre ones
+3. **ONLY cite sources you ACTUALLY use in the text**
+4. **DO NOT list every search result - be HIGHLY SELECTIVE**
+
 ## CRITICAL: ADAPT YOUR STRUCTURE TO THE RESEARCH TYPE!
 
 Different research topics need different structures. Be creative and intelligent:
@@ -79,9 +86,11 @@ You have access to search and synthesis tools:
 - Include multiple perspectives and viewpoints
 - Provide in-depth analysis for each major section
 - Add specific examples, case studies, and data points
-- Cite ONLY the sources you actually use in the text
+- **CRITICAL**: Cite ONLY 10-15 sources maximum in the References section
+- **CRITICAL**: Each reference must be cited at least once in the text
+- **CRITICAL**: Remove any sources not cited in the text
 - Ensure each claim is backed by evidence
-- **QUALITY OVER QUANTITY**: Better to have 12 excellent sources than 50 mediocre ones
+- **QUALITY OVER QUANTITY**: 12 excellent sources > 50 mediocre ones
 
 ## Example Workflows:
 
@@ -216,11 +225,19 @@ Query: "AI in healthcare"
 - Future research directions
 
 ## References
+
+⚠️ **CRITICAL INSTRUCTION FOR REFERENCES SECTION:**
+- **MAXIMUM 15 references** (ideally 10-12)
+- **ONLY list sources that appear as [1], [2], [3] etc. in the text above**
+- **DO NOT list sources you didn't cite**
+- **DO NOT list every search result**
+- **BE HIGHLY SELECTIVE** - choose the best sources only
+
 1. Author/Organization. (Date). *Title*. Source Name. [URL]
 2. Author/Organization. (Date). *Title*. Source Name. [URL]
 3. Author/Organization. (Date). *Title*. Source Name. [URL]
 ...
-[Include ONLY sources that are ACTUALLY CITED in the text - typically 10-15 high-quality sources]
+[Continue ONLY up to reference [15] maximum]
 
 **FORMATTING EXAMPLES:**
 1. Smith, J., & Johnson, M. (2024). *AI in Healthcare: A Comprehensive Review*. Nature Medicine, 15(3), 234-245. [https://nature.com/...]
@@ -238,14 +255,20 @@ Query: "AI in healthcare"
 - Provide depth, not just breadth
 - Quality and thoroughness are paramount
 
-**REFERENCE GUIDELINES (CRITICAL):**
-- **QUALITY OVER QUANTITY**: 10-15 high-quality references is better than 50+ mediocre ones
-- **ONLY list sources that are ACTUALLY CITED in the text**
-- **DO NOT list every search result - be selective**
+**REFERENCE GUIDELINES (CRITICAL - MUST FOLLOW):**
+- **ABSOLUTE MAXIMUM: 15 references** (no exceptions!)
+- **IDEAL TARGET: 10-12 references**
+- **QUALITY OVER QUANTITY**: 10 excellent sources > 100 mediocre ones
+- **ONLY list sources that are ACTUALLY CITED in the text with [1], [2], [3] etc.**
+- **DO NOT list every search result - be HIGHLY selective**
 - **Prioritize**: Academic papers > Official sources > News articles > General web
-- **Each reference should be cited at least once in the text**
+- **Each reference MUST be cited at least once in the text**
 - **Remove duplicate or redundant sources**
-- **Focus on the most authoritative and relevant sources**`,
+- **Focus on the most authoritative and relevant sources**
+- **If you have more than 15 sources, REMOVE the least important ones**
+
+## FINAL REMINDER BEFORE YOU START:
+When you finish writing, COUNT your references. If you have more than 15, you MUST remove the least important ones until you have 15 or fewer. This is NON-NEGOTIABLE.`,
    model: google('gemini-2.5-flash-lite'),
    tools: {
       // Primary tools - use these first
