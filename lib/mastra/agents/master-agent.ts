@@ -9,9 +9,25 @@ import { exportAgent } from './export-agent';
 const googleEmbedding = google.textEmbeddingModel('text-embedding-004');
 
 // Configure vector store for semantic recall
-const vectorStore = new LibSQLVector({
-  connectionUrl: 'file:./mastra-memory.db',
-});
+// Use remote Turso database on Vercel, local file in development
+const isVercel = process.env.VERCEL === '1';
+const connectionUrl = isVercel 
+  ? process.env.TURSO_DATABASE_URL || 'memory-disabled' // Use Turso on Vercel
+  : 'file:./mastra-memory.db'; // Use local file in development
+
+// Only create vector store if we have a valid connection
+let vectorStore: LibSQLVector | undefined;
+try {
+  if (connectionUrl !== 'memory-disabled') {
+    vectorStore = new LibSQLVector({
+      connectionUrl,
+      authToken: process.env.TURSO_AUTH_TOKEN, // Only needed for Turso
+    });
+  }
+} catch (error) {
+  console.warn('Vector store initialization failed, memory features will be disabled:', error);
+  vectorStore = undefined;
+}
 
 /**
  * Master Agent - Orchestrates research and export operations
@@ -159,14 +175,16 @@ Remember: Execute immediately, return complete results, never just acknowledge t
     researchAgent,
     exportAgent,
   },
-  memory: new Memory({
-    vector: vectorStore, // Vector store for semantic recall
-    embedder: googleEmbedding, // Use Google's text-embedding-004 (generous free tier)
-    options: {
-      lastMessages: 20, // Keep last 20 messages for context
-      workingMemory: {
-        enabled: true,
-        template: `# Conversation Context
+  // Only enable memory if vector store is available
+  ...(vectorStore && {
+    memory: new Memory({
+      vector: vectorStore, // Vector store for semantic recall
+      embedder: googleEmbedding, // Use Google's text-embedding-004 (generous free tier)
+      options: {
+        lastMessages: 20, // Keep last 20 messages for context
+        workingMemory: {
+          enabled: true,
+          template: `# Conversation Context
 
 ## User Information
 - **Name**: 
@@ -184,13 +202,14 @@ Remember: Execute immediately, return complete results, never just acknowledge t
 - **Preferred Export Format**: 
 - **Special Requirements**: 
 `,
+        },
+        // Semantic recall enabled with Google embeddings
+        semanticRecall: {
+          topK: 5,
+          messageRange: 2,
+          scope: 'thread',
+        },
       },
-      // Semantic recall enabled with Google embeddings
-      semanticRecall: {
-        topK: 5,
-        messageRange: 2,
-        scope: 'thread',
-      },
-    },
+    }),
   }),
 });
