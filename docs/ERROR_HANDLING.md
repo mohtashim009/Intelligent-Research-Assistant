@@ -43,7 +43,7 @@ if (typeof window === 'undefined') {
     researchAgent = new Agent({
       name: 'Research Assistant Agent',
       instructions: 'You are a research assistant AI. You can use tools from connected MCP servers to provide comprehensive research responses. Always format your responses in markdown with clear headings and bullet points where appropriate.',
-      model: google('gemini-2.5-flash'),
+      model: google('gemini-2.5-flash-lite'),
       tools: mcp ? await mcp.getTools() : {}
     });
   } catch (error) {

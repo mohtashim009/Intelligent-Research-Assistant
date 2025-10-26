@@ -17,14 +17,11 @@ function getPerplexityApiKey(): string {
 }
 
 // Direct Perplexity API call (no MCP needed)
-async function callPerplexityAPI(messages: Array<{ role: string; content: string }>, model: string = 'llama-3.1-sonar-large-128k-online') {
+async function callPerplexityAPI(messages: Array<{ role: string; content: string }>, model: string = 'sonar') {
     const apiKey = getPerplexityApiKey(); // Get key at runtime
 
     console.log('🔍 Calling Perplexity API...');
     console.log('   Model:', model);
-    console.log('   API Key present:', !!apiKey);
-    console.log('   API Key length:', apiKey.length);
-    console.log('   API Key prefix:', apiKey.substring(0, 8) + '...');
 
     const response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
@@ -55,7 +52,7 @@ async function callPerplexityAPI(messages: Array<{ role: string; content: string
 // Perplexity Search Tool (direct API)
 export const perplexitySearchTool = createTool({
     id: 'perplexity_search',
-    description: 'Search the web using Perplexity AI with real-time information and citations. Use this for comprehensive research with up-to-date information.',
+    description: 'Search the web using Perplexity AI with real-time information and citations. Use this for general questions when SerpAPI tools are not sufficient. Provides quick, cited answers.',
     inputSchema: z.object({
         query: z.string().describe('Search query or research question'),
     }),
@@ -69,7 +66,7 @@ export const perplexitySearchTool = createTool({
                 role: 'user',
                 content: context.query,
             },
-        ], 'llama-3.1-sonar-large-128k-online');
+        ], 'sonar');
 
         return result;
     },
@@ -78,7 +75,7 @@ export const perplexitySearchTool = createTool({
 // Perplexity Deep Research Tool (direct API)
 export const perplexityResearchTool = createTool({
     id: 'perplexity_research',
-    description: 'Conduct in-depth research using Perplexity AI. Use this for complex research questions requiring detailed analysis and multiple sources.',
+    description: 'EXTREME CASES ONLY: Use only when SerpAPI tools and perplexity_search fail to provide results. Conducts very deep research with detailed analysis.',
     inputSchema: z.object({
         query: z.string().describe('Research question or topic'),
     }),
@@ -101,7 +98,7 @@ Format your response as a detailed research report in markdown.`,
                 role: 'user',
                 content: context.query,
             },
-        ], 'llama-3.1-sonar-large-128k-online');
+        ], 'sonar');
 
         return result;
     },
@@ -110,7 +107,7 @@ Format your response as a detailed research report in markdown.`,
 // Perplexity Reasoning Tool (direct API)
 export const perplexityReasoningTool = createTool({
     id: 'perplexity_reason',
-    description: 'Use Perplexity AI for complex reasoning and analysis tasks. Best for questions requiring logical thinking and step-by-step analysis.',
+    description: 'Use for complex reasoning and analysis tasks that require logical thinking. Use sparingly - prefer SerpAPI tools for factual research.',
     inputSchema: z.object({
         query: z.string().describe('Question or problem requiring reasoning'),
     }),
@@ -124,7 +121,7 @@ export const perplexityReasoningTool = createTool({
                 role: 'user',
                 content: context.query,
             },
-        ], 'llama-3.1-sonar-large-128k-online');
+        ], 'sonar');
 
         return result;
     },

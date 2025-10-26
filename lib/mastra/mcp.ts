@@ -175,7 +175,7 @@ async function initializeMCP() {
 7. **Generate comprehensive report** with citations from all sources
 8. **Review for completeness** and accuracy
 
-## Output Format:
+## Output Format: (default. If user asks for a specific format, then you can carter accordingly.)
 
 # [Research Topic]
 
@@ -207,7 +207,7 @@ async function initializeMCP() {
 ...
 
 Remember: Quality over speed. Thorough research with multiple sources is essential.`,
-        model: google('gemini-2.5-flash'),
+        model: google('gemini-2.5-flash-lite'),
         tools: {
           ...perplexityTools,    // Direct Perplexity API (always available)
           ...serpApiTools,       // SerpAPI tools (always available)

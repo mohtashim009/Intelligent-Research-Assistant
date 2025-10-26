@@ -12,10 +12,17 @@ interface MarkdownRendererProps {
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = '' }) => {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const parseMarkdown = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
     let currentList: React.ReactNode[] = [];
+    let currentOrderedList: React.ReactNode[] = [];
     let inCodeBlock = false;
     let codeBlockContent: string[] = [];
     let codeBlockLanguage = '';
@@ -28,6 +35,17 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
           </ul>
         );
         currentList = [];
+      }
+    };
+
+    const flushOrderedList = () => {
+      if (currentOrderedList.length > 0) {
+        elements.push(
+          <ol key={`ol-${elements.length}`} className="list-decimal list-inside space-y-1 my-3 ml-4">
+            {currentOrderedList}
+          </ol>
+        );
+        currentOrderedList = [];
       }
     };
 
@@ -67,6 +85,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       // Handle empty lines
       if (line.trim() === '') {
         flushList();
+        flushOrderedList();
         if (elements.length > 0) {
           elements.push(<div key={`space-${elements.length}`} className="h-2" />);
         }
@@ -76,6 +95,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       // Handle headers
       if (line.startsWith('# ')) {
         flushList();
+        flushOrderedList();
         elements.push(
           <h1 key={`h1-${elements.length}`} className="text-heading-lg font-bold my-4">
             {parseInlineMarkdown(line.slice(2))}
@@ -86,6 +106,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       if (line.startsWith('## ')) {
         flushList();
+        flushOrderedList();
         elements.push(
           <h2 key={`h2-${elements.length}`} className="text-heading-md font-semibold my-3">
             {parseInlineMarkdown(line.slice(3))}
@@ -96,6 +117,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       if (line.startsWith('### ')) {
         flushList();
+        flushOrderedList();
         elements.push(
           <h3 key={`h3-${elements.length}`} className="text-body-lg font-semibold my-2">
             {parseInlineMarkdown(line.slice(4))}
@@ -104,14 +126,69 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         return;
       }
 
+      if (line.startsWith('#### ')) {
+        flushList();
+        flushOrderedList();
+        elements.push(
+          <h4 key={`h4-${elements.length}`} className="text-body-md font-semibold my-2">
+            {parseInlineMarkdown(line.slice(5))}
+          </h4>
+        );
+        return;
+      }
+
+      if (line.startsWith('##### ')) {
+        flushList();
+        flushOrderedList();
+        elements.push(
+          <h5 key={`h5-${elements.length}`} className="text-body-md font-medium my-2">
+            {parseInlineMarkdown(line.slice(6))}
+          </h5>
+        );
+        return;
+      }
+
+      if (line.startsWith('###### ')) {
+        flushList();
+        flushOrderedList();
+        elements.push(
+          <h6 key={`h6-${elements.length}`} className="text-body-sm font-medium my-2">
+            {parseInlineMarkdown(line.slice(7))}
+          </h6>
+        );
+        return;
+      }
+
       // Handle horizontal rules
       if (line.trim() === '---' || line.trim() === '***') {
         flushList();
+        flushOrderedList();
         elements.push(<Separator key={`hr-${elements.length}`} className="my-4" />);
         return;
       }
 
-      // Handle list items
+      // Handle task list items (GitHub Flavored Markdown)
+      const taskListMatch = line.match(/^[\s]*[•\-\*]\s\[([ xX])\]\s(.+)$/);
+      if (taskListMatch) {
+        const isChecked = taskListMatch[1].toLowerCase() === 'x';
+        const content = taskListMatch[2];
+        currentList.push(
+          <li key={`li-${elements.length}-${currentList.length}`} className="text-body-md flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              disabled
+              className="mt-1 cursor-not-allowed"
+            />
+            <span className={isChecked ? 'line-through opacity-70' : ''}>
+              {parseInlineMarkdown(content)}
+            </span>
+          </li>
+        );
+        return;
+      }
+
+      // Handle regular list items
       if (line.match(/^[\s]*[•\-\*]\s/)) {
         const content = line.replace(/^[\s]*[•\-\*]\s/, '');
         currentList.push(
@@ -124,12 +201,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       // Handle numbered lists
       if (line.match(/^[\s]*\d+\.\s/)) {
-        flushList();
+        flushList(); // Flush unordered list if any
         const content = line.replace(/^[\s]*\d+\.\s/, '');
-        elements.push(
-          <ol key={`ol-${elements.length}`} className="list-decimal list-inside space-y-1 my-3 ml-4">
-            <li className="text-body-md">{parseInlineMarkdown(content)}</li>
-          </ol>
+        currentOrderedList.push(
+          <li key={`oli-${elements.length}-${currentOrderedList.length}`} className="text-body-md">
+            {parseInlineMarkdown(content)}
+          </li>
         );
         return;
       }
@@ -137,6 +214,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       // Handle blockquotes
       if (line.startsWith('> ')) {
         flushList();
+        flushOrderedList();
         elements.push(
           <blockquote key={`quote-${elements.length}`} className="border-l-4 border-primary pl-4 my-3 italic text-muted-foreground">
             {parseInlineMarkdown(line.slice(2))}
@@ -147,6 +225,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       // Handle regular paragraphs
       flushList();
+      flushOrderedList();
       elements.push(
         <p key={`p-${elements.length}`} className="text-body-md my-2 leading-relaxed">
           {parseInlineMarkdown(line)}
@@ -156,6 +235,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
     // Flush any remaining items
     flushList();
+    flushOrderedList();
     flushCodeBlock();
 
     return elements;
@@ -190,8 +270,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       return placeholder;
     });
 
-    // Handle italic text
-    currentText = currentText.replace(/\*([^*]+)\*/g, (match, italic) => {
+    // Handle italic text (avoid matching bold)
+    currentText = currentText.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, (match, italic) => {
       const placeholder = `__ITALIC_${key}__`;
       parts.push(
         <em key={`italic-${key}`} className="italic">
@@ -202,23 +282,41 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       return placeholder;
     });
 
-    // Handle links
-    currentText = currentText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      const placeholder = `__LINK_${key}__`;
+    // Handle strikethrough
+    currentText = currentText.replace(/~~([^~]+)~~/g, (match, strike) => {
+      const placeholder = `__STRIKE_${key}__`;
       parts.push(
-        <a
-          key={`link-${key}`}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 underline"
-        >
-          {text}
-        </a>
+        <del key={`strike-${key}`} className="line-through opacity-70">
+          {strike}
+        </del>
       );
       key++;
       return placeholder;
     });
+
+    // Handle links (improved regex to handle complex URLs)
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let linkMatch;
+    while ((linkMatch = linkRegex.exec(currentText)) !== null) {
+      const placeholder = `__LINK_${key}__`;
+      const linkText = linkMatch[1];
+      const linkUrl = linkMatch[2];
+
+      parts.push(
+        <a
+          key={`link-${key}`}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 hover:underline break-words"
+        >
+          {linkText}
+        </a>
+      );
+
+      currentText = currentText.replace(linkMatch[0], placeholder);
+      key++;
+    }
 
     // Split by placeholders and reconstruct
     const tokens = currentText.split(/(__[A-Z_]+_\d+__)/);
@@ -227,7 +325,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
     tokens.forEach((token, index) => {
       if (token.startsWith('__') && token.endsWith('__')) {
         // Find the corresponding component
-        const matchingPart = parts.find((part: any) => 
+        const matchingPart = parts.find((part: any) =>
           part.key && token.includes(part.key.split('-')[1])
         );
         if (matchingPart) {
@@ -240,6 +338,15 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
     return result.length > 0 ? result : text;
   };
+
+  // Prevent hydration mismatch by only rendering on client
+  if (!mounted) {
+    return (
+      <div className={`markdown-content ${className}`}>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`markdown-content ${className}`}>

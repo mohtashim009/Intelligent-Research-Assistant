@@ -9,7 +9,7 @@
 
 - **Google AI (Gemini)**: Working perfectly
   - Powers the main research agent
-  - Model: gemini-2.5-flash
+  - Model: gemini-2.5-flash-lite
 
 ### ❌ Not Working APIs
 - **Perplexity API**: API key invalid or expired
