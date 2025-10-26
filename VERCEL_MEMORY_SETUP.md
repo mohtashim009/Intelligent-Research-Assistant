@@ -20,13 +20,30 @@ The master agent now automatically adapts based on environment:
 
 ## Current Configuration
 
-The code now checks the environment:
+The code now checks the environment in TWO places:
 
+### 1. Master Agent (`lib/mastra/agents/master-agent.ts`)
 ```typescript
 const isVercel = process.env.VERCEL === '1';
 const connectionUrl = isVercel 
   ? process.env.TURSO_DATABASE_URL || 'memory-disabled'
   : 'file:./mastra-memory.db';
+```
+
+### 2. Main Mastra Instance (`lib/mastra/index.ts`)
+```typescript
+const isVercel = process.env.VERCEL === '1';
+const connectionUrl = isVercel 
+  ? process.env.TURSO_DATABASE_URL 
+  : 'file:./mastra-memory.db';
+
+// Only add storage and vectors if not on Vercel or if Turso is configured
+if (connectionUrl && !isVercel) {
+  // Use local database
+} else if (connectionUrl && isVercel && process.env.TURSO_AUTH_TOKEN) {
+  // Use Turso on Vercel
+}
+// Otherwise: No storage/vectors (Vercel without Turso)
 ```
 
 ### Without Turso (Current Setup)
