@@ -3,6 +3,7 @@ import { LibSQLStore, LibSQLVector } from '@mastra/libsql';
 import { masterAgent } from './agents/master-agent';
 import { researchAgent } from './agents/research-agent';
 import { exportAgent } from './agents/export-agent';
+import { draftAgent } from './agents/draft-agent';
 
 /**
  * Main Mastra instance with multi-agent architecture
@@ -11,6 +12,7 @@ import { exportAgent } from './agents/export-agent';
  * - Master Agent: Orchestrates and enhances prompts with context
  * - Research Agent: Conducts deep research with multiple sources
  * - Export Agent: Formats and prepares documents for export
+ * - Draft Agent: Modifies and customizes reports (format conversion, content additions)
  * 
  * Note: Lazy-loaded to avoid initialization during build phase
  * Storage and vectors are optional on Vercel (serverless environment)
@@ -32,6 +34,7 @@ function initMastra(): Mastra {
         masterAgent,
         researchAgent,
         exportAgent,
+        draftAgent,
       },
     };
 
@@ -80,4 +83,4 @@ export const mastra = {
 } as Mastra;
 
 // Export agents for direct access if needed
-export { masterAgent, researchAgent, exportAgent };
+export { masterAgent, researchAgent, exportAgent, draftAgent };

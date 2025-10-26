@@ -38,15 +38,30 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       }
     };
 
-    const flushOrderedList = () => {
+    let orderedListCounter = 0; // Track the counter across multiple <ol> elements
+    let lastWasOrderedList = false; // Track if the last flushed element was an ordered list
+    
+    const flushOrderedList = (resetCounter: boolean = false) => {
       if (currentOrderedList.length > 0) {
+        const startValue = (lastWasOrderedList && !resetCounter) ? orderedListCounter + 1 : 1;
+        orderedListCounter = startValue + currentOrderedList.length - 1;
         elements.push(
-          <ol key={`ol-${elements.length}`} className="list-decimal list-inside space-y-1 my-3 ml-4">
+          <ol 
+            key={`ol-${elements.length}`} 
+            className="list-decimal list-inside space-y-1 my-3 ml-4"
+            start={startValue}
+          >
             {currentOrderedList}
           </ol>
         );
         currentOrderedList = [];
+        lastWasOrderedList = true;
       }
+    };
+    
+    const resetOrderedListCounter = () => {
+      orderedListCounter = 0;
+      lastWasOrderedList = false;
     };
 
     const flushCodeBlock = () => {
@@ -86,6 +101,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.trim() === '') {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on empty lines
         if (elements.length > 0) {
           elements.push(<div key={`space-${elements.length}`} className="h-2" />);
         }
@@ -96,6 +112,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('# ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h1 key={`h1-${elements.length}`} className="text-heading-lg font-bold my-4">
             {parseInlineMarkdown(line.slice(2))}
@@ -107,6 +124,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('## ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h2 key={`h2-${elements.length}`} className="text-heading-md font-semibold my-3">
             {parseInlineMarkdown(line.slice(3))}
@@ -118,6 +136,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('### ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h3 key={`h3-${elements.length}`} className="text-body-lg font-semibold my-2">
             {parseInlineMarkdown(line.slice(4))}
@@ -129,6 +148,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('#### ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h4 key={`h4-${elements.length}`} className="text-body-md font-semibold my-2">
             {parseInlineMarkdown(line.slice(5))}
@@ -140,6 +160,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('##### ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h5 key={`h5-${elements.length}`} className="text-body-md font-medium my-2">
             {parseInlineMarkdown(line.slice(6))}
@@ -151,6 +172,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith('###### ')) {
         flushList();
         flushOrderedList();
+        resetOrderedListCounter(); // Reset counter on headers
         elements.push(
           <h6 key={`h6-${elements.length}`} className="text-body-sm font-medium my-2">
             {parseInlineMarkdown(line.slice(7))}
@@ -188,8 +210,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         return;
       }
 
-      // Handle regular list items
+      // Handle regular list items (including indented ones)
       if (line.match(/^[\s]*[•\-\*]\s/)) {
+        flushOrderedList(); // Flush numbered list if switching to bullets (but don't reset counter)
         const content = line.replace(/^[\s]*[•\-\*]\s/, '');
         currentList.push(
           <li key={`li-${elements.length}-${currentList.length}`} className="text-body-md">
@@ -226,6 +249,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       // Handle regular paragraphs
       flushList();
       flushOrderedList();
+      resetOrderedListCounter(); // Reset counter when we hit a paragraph (non-list content)
       elements.push(
         <p key={`p-${elements.length}`} className="text-body-md my-2 leading-relaxed">
           {parseInlineMarkdown(line)}

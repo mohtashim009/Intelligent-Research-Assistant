@@ -8,6 +8,7 @@ A sophisticated AI-powered research assistant built with Mastra.ai, featuring co
 - **Master Agent**: Orchestrates conversations and enhances prompts with context
 - **Research Agent**: Conducts deep, multi-source research with citations
 - **Export Agent**: Formats documents professionally for PDF, HTML, and Markdown
+- **Draft Agent**: ✨ NEW! Modifies and customizes reports (IEEE, APA, MLA formats, content additions)
 
 ### 🧠 Intelligent Context Management
 - **Working Memory**: Tracks user preferences, research history, and conversation state
@@ -24,10 +25,11 @@ A sophisticated AI-powered research assistant built with Mastra.ai, featuring co
 - **Academic Sources**: Google Scholar for peer-reviewed research
 - **Current Events**: Google News for latest developments
 
-### 📄 Professional Export
+### 📄 Professional Export & Customization
 - **PDF**: Proper pagination, margins, and typography
 - **HTML**: Responsive, print-friendly design
 - **Markdown**: Clean syntax for easy sharing
+- **Draft Mode**: ✨ NEW! Customize reports with format conversion (IEEE, APA, MLA) and content modifications
 - **Consistent Formatting**: Professional styling across all formats
 
 ## 🚀 Quick Start
@@ -110,16 +112,49 @@ await ExportService.exportToHTML(messages, "Research Report");
 await ExportService.exportToMarkdown(messages, "Research Report");
 ```
 
+### Customize Reports (NEW!)
+
+```typescript
+import { mastra } from '@/lib/mastra';
+
+const masterAgent = mastra.getAgent('masterAgent');
+const ids = { thread: "session-123", resource: "user-456" };
+
+// Step 1: Generate research report
+await masterAgent.generate(
+  "Research quantum computing applications",
+  { memory: ids, maxSteps: 15 }
+);
+// Report is now stored in memory
+
+// Step 2: Convert to IEEE format (agent retrieves report from memory)
+await masterAgent.generate(
+  "Convert this report to IEEE format",
+  { memory: ids, maxSteps: 10 }
+);
+
+// Step 3: Add a new section (agent retrieves IEEE version from memory)
+await masterAgent.generate(
+  "Add a System Design section with microservices architecture details",
+  { memory: ids, maxSteps: 10 }
+);
+
+// The agent automatically retrieves and modifies the report from memory!
+// See DRAFT_AGENT_GUIDE.md for more examples
+```
+
 ## 📚 Documentation
 
 ### Core Documentation
 - **[Quick Start Guide](QUICK_START_GUIDE.md)** - Get started in 5 minutes
+- **[Draft Agent Guide](DRAFT_AGENT_GUIDE.md)** - ✨ NEW! Customize and modify reports
 - **[Architecture Overview](MULTI_AGENT_ARCHITECTURE.md)** - Detailed system design
 - **[Migration Guide](MIGRATION_GUIDE.md)** - Upgrade from legacy system
 - **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - What was built
 
 ### Examples
 - **[Usage Examples](examples/multi-agent-usage.ts)** - 10+ practical examples
+- **[Draft Agent Examples](examples/draft-agent-usage.ts)** - ✨ NEW! Report customization examples
 - **API Examples** - See Quick Start Guide
 - **Integration Examples** - See Architecture Overview
 
@@ -138,18 +173,23 @@ await ExportService.exportToMarkdown(messages, "Research Report");
 │  • Asks clarifying questions                            │
 │  • Delegates to sub-agents                              │
 │  • Maintains conversation memory                        │
-└────────────┬───────────────────────────┬────────────────┘
-             │                           │
-             ▼                           ▼
-┌────────────────────────┐  ┌──────────────────────────┐
-│   Research Agent       │  │    Export Agent          │
-│  • Multi-source search │  │  • Format documents      │
-│  • Deep analysis       │  │  • Professional styling  │
-│  • Citations           │  │  • Pagination            │
-│  • Comprehensive       │  │  • Multiple formats      │
-└────────────────────────┘  └──────────────────────────┘
-             │                           │
-             ▼                           ▼
+└──────┬──────────────────┬──────────────┬────────────────┘
+       │                  │              │
+       ▼                  ▼              ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Research   │  │    Export    │  │    Draft     │
+│    Agent     │  │    Agent     │  │    Agent     │
+│  • Multi-    │  │  • Format    │  │  • Format    │
+│    source    │  │    documents │  │    convert   │
+│  • Deep      │  │  • Pro       │  │  • Add       │
+│    analysis  │  │    styling   │  │    sections  │
+│  • Citations │  │  • Multiple  │  │  • Modify    │
+│              │  │    formats   │  │    content   │
+└──────────────┘  └──────────────┘  └──────────────┘
+       │                  │              │
+       └──────────────────┴──────────────┘
+                     │
+                     ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    Memory System                         │
 │  • Working Memory (user context)                        │
@@ -410,7 +450,10 @@ Built with:
 
 ## 🗺️ Roadmap
 
-### v1.1 (Next Release)
+### v1.1 (Current Release)
+- [x] Draft agent for report customization ✨ NEW!
+- [x] Format conversion (IEEE, APA, MLA, etc.)
+- [x] Content modification and section management
 - [ ] Citation agent
 - [ ] Summary agent
 - [ ] Translation agent
@@ -433,16 +476,17 @@ Built with:
 
 ## 📈 Stats
 
-- **Agents**: 3 (Master, Research, Export)
-- **Tools**: 15+ (Perplexity, SerpAPI, etc.)
+- **Agents**: 4 (Master, Research, Export, Draft)
+- **Tools**: 17+ (Perplexity, SerpAPI, Draft tools, etc.)
 - **Memory Types**: 3 (Working, Semantic, History)
 - **Export Formats**: 3 (PDF, HTML, Markdown)
+- **Report Formats**: 4+ (IEEE, APA, MLA, Chicago, Custom)
 - **Search Engines**: 10+ (Google, Bing, DuckDuckGo, etc.)
 
 ---
 
-**Version**: 1.0.0  
+**Version**: 1.1.0  
 **Status**: Production Ready ✅  
-**Last Updated**: 2025-10-25
+**Last Updated**: 2025-10-26
 
 Made with ❤️ using Mastra.ai

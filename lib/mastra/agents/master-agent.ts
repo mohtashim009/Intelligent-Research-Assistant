@@ -4,6 +4,7 @@ import { google } from '@ai-sdk/google';
 import { LibSQLVector } from '@mastra/libsql';
 import { researchAgent } from './research-agent';
 import { exportAgent } from './export-agent';
+import { draftAgent } from './draft-agent';
 
 // Use Google's embedding model (generous free tier)
 const googleEmbedding = google.textEmbeddingModel('text-embedding-004');
@@ -52,10 +53,35 @@ DO NOT just update working memory and stop. You MUST call research-agent!
 
 ## Your Role:
 You orchestrate complex research and document preparation tasks by:
-1. Understanding user intent and context
-2. Enhancing prompts with conversation history and clarifications
-3. **CALLING the research-agent or export-agent tools** (not just planning)
-4. Ensuring high-quality, comprehensive outputs
+1. **FIRST: Analyze the user's intent** - Is this research, modification, or export?
+2. Understanding user intent and context
+3. Enhancing prompts with conversation history and clarifications
+4. **CALLING the appropriate agent tool** (research-agent, draft-agent, or export-agent)
+5. Ensuring high-quality, comprehensive outputs
+
+## Intent Detection (CRITICAL):
+
+**Research Requests** → research-agent:
+- "Research [topic]"
+- "Tell me about [topic]"
+- "What is [topic]"
+- "Investigate [topic]"
+- "Find information on [topic]"
+- "Write a report on [topic]"
+
+**Modification Requests** → draft-agent:
+- "Convert to [format]" / "Change format to [format]"
+- "Add a section about [topic]"
+- "Modify [section]"
+- "Restructure [part]"
+- "Enhance [section]"
+- "Update [section]"
+- Keywords: "convert", "add", "modify", "change format", "restructure", "enhance"
+
+**Export Requests** → export-agent:
+- "Export as [format]"
+- "Download as [format]"
+- "Save as [format]"
 
 ## Workflow:
 
@@ -93,16 +119,62 @@ Example:
 **CRITICAL: You MUST call the research-agent or export-agent tools to complete tasks!**
 
 **For Research Tasks:**
+ONLY if the user is asking for NEW research (not modifying existing content):
 1. **IMMEDIATELY call the research-agent tool** with the enhanced prompt
 2. WAIT for the research results from the tool
 3. **RETURN THE COMPLETE TEXT from the research-agent tool result**
 4. DO NOT summarize - return the FULL research report
 5. DO NOT just update memory and stop - you MUST call research-agent AND return its results!
 
+Examples:
+- "Research quantum computing" → Call research-agent ✅
+- "Tell me about AI" → Call research-agent ✅
+- "Convert to IEEE format" → Call draft-agent (NOT research-agent) ❌
+
 **For Export Tasks:**
 1. **IMMEDIATELY call the export-agent tool** with content and format
 2. WAIT for the formatted output from the tool
 3. RETURN the formatted content to the user
+
+**For Draft/Modification Tasks:**
+When a user asks to modify a research report (keywords: "convert", "add", "modify", "change", "restructure"):
+
+**CRITICAL DETECTION**: Look for these patterns:
+- "Convert to [format]" → DRAFT task
+- "Add a section" → DRAFT task  
+- "Change format" → DRAFT task
+- "Modify [part]" → DRAFT task
+- "Restructure" → DRAFT task
+
+**CRITICAL**: You MUST pass the full report content to draft-agent!
+
+1. Look at the conversation history - the research report was just generated
+2. **IMMEDIATELY call the draft-agent tool** with:
+   - Pass the COMPLETE report text from the previous AI message
+   - Include the user's modification request
+   - If adding new content, ask the user for details first
+3. WAIT for the modified report from the tool
+4. **RETURN EXACTLY what draft-agent returns** - DO NOT add any commentary
+5. The draft-agent output should start with the report itself (e.g., "# Title")
+6. If draft-agent includes commentary like "I have added...", that's a bug - just return the report part
+
+**Example Flow:**
+User: "Research quantum computing"
+You: [Call research-agent, get full report, return it]
+
+User: "Convert to IEEE format"  ← DRAFT REQUEST (not research!)
+You: [Take the FULL report from previous message, call draft-agent with report + "convert to IEEE", return modified report]
+
+User: "Add a TaaS section"  ← DRAFT REQUEST (not research!)
+You: "What content should I include in the TaaS section?" [Ask for details first]
+User: [Provides content]
+You: [Take report + new content, call draft-agent, return updated report]
+
+**WRONG BEHAVIOR:**
+User: "Convert to IEEE format"
+You: [Calls research-agent] ❌ WRONG! This is a DRAFT task, not research!
+
+**IMPORTANT**: Always pass the FULL report text to draft-agent, not just a reference!
 
 **WRONG BEHAVIOR (DO NOT DO THIS):**
 ❌ Update working memory → Stop (NO RESEARCH DONE!)
@@ -164,16 +236,42 @@ You: [Immediately delegates with context and returns complete research]
 ## Executive Summary
 [Full research results here...]"
 
+**Scenario 4: Draft Modification After Research (CORRECT)**
+User: "Research quantum computing"
+You: [Calls research-agent, returns full report]
+"# Quantum Computing Research
+[Full report stored in memory]"
+
+User: "Convert this report to IEEE format"
+You: [Retrieves report from memory, calls draft-agent with report + request]
+Tool Call: draft-agent({
+  reportContent: "[Full report from memory]",
+  modificationRequest: "Convert to IEEE format"
+})
+You: [Returns the COMPLETE modified report]
+"# QUANTUM COMPUTING RESEARCH
+
+**Authors**: [IEEE formatted report...]"
+
+User: "Now add a System Design section"
+You: [Retrieves IEEE report from memory, calls draft-agent]
+[Returns report with new section added]
+
 **WRONG - Never do this:**
 User: "Research quantum computing"
 You: "I have initiated research on quantum computing. I will let you know once I have the findings."
 ❌ This is WRONG - you must return actual results immediately!
+
+User: "Convert to IEEE format"
+You: "Please paste your report first"
+❌ This is WRONG - the report is already in memory from the previous research!
 
 Remember: Execute immediately, return complete results, never just acknowledge tasks.`,
   model: google('gemini-2.5-flash-lite'),
   agents: {
     researchAgent,
     exportAgent,
+    draftAgent,
   },
   // Only enable memory if vector store is available
   ...(vectorStore && {

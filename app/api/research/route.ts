@@ -17,14 +17,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the research agent directly (bypassing master for now to debug)
-    const researchAgent = mastra.getAgent('researchAgent');
+    // Get the master agent to handle routing to appropriate sub-agents
+    const masterAgent = mastra.getAgent('masterAgent');
 
     // Track progress logs
     const progressLogs: string[] = [];
 
     // Generate response with memory context and step logging
-    const result = await researchAgent.generate(query, {
+    const result = await masterAgent.generate(query, {
       memory: threadId && resourceId ? {
         thread: threadId,
         resource: resourceId,

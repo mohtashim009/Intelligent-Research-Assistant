@@ -27,7 +27,35 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deepResearchMode, setDeepResearchMode] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState('AI is thinking...');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Detect operation type from user message
+  const detectOperationType = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Draft/Modification operations
+    if (lowerMessage.includes('convert') || 
+        lowerMessage.includes('change format') ||
+        lowerMessage.includes('add a section') ||
+        lowerMessage.includes('add section') ||
+        lowerMessage.includes('modify') ||
+        lowerMessage.includes('restructure') ||
+        lowerMessage.includes('enhance') ||
+        lowerMessage.includes('update')) {
+      return 'Drafting in progress...';
+    }
+    
+    // Export operations
+    if (lowerMessage.includes('export') || 
+        lowerMessage.includes('download') ||
+        lowerMessage.includes('save as')) {
+      return 'Preparing export...';
+    }
+    
+    // Research operations (default)
+    return 'Conducting deep research...';
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -68,6 +96,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    
+    // Detect operation type and set appropriate loading message
+    const operationMessage = detectOperationType(content);
+    setLoadingMessage(operationMessage);
     setChatStatus(ChatStatus.THINKING);
 
     // Generate AI response using research service if in deep research mode
@@ -248,7 +280,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
                         AI
                       </div>
-                      <TypingIndicator />
+                      <TypingIndicator message={loadingMessage} />
                     </div>
                   )}
                 </div>

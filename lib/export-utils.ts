@@ -52,33 +52,159 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
     return false;
   };
 
-  // Helper to clean and format text for PDF
-  const cleanTextForPDF = (text: string): string => {
-    // Remove markdown formatting
-    let cleaned = text
-      .replace(/\*\*(.+?)\*\*/g, '$1') // Bold
-      .replace(/\*(.+?)\*/g, '$1') // Italic  
-      .replace(/`(.+?)`/g, '"$1"') // Inline code to quotes
-      .replace(/~~(.+?)~~/g, '$1'); // Strikethrough
+  // Helper to parse text with inline formatting (bold, italic, etc.)
+  interface TextSegment {
+    text: string;
+    bold: boolean;
+    italic: boolean;
+  }
+
+  const parseInlineFormatting = (text: string): TextSegment[] => {
+    const segments: TextSegment[] = [];
+    let currentPos = 0;
     
-    // Handle links but PRESERVE numbered citations [1], [2], etc.
-    // First, protect numbered citations
-    const citations: string[] = [];
-    cleaned = cleaned.replace(/\[(\d+(?:,\s*\d+)*)\]/g, (match) => {
-      const placeholder = `__CITATION_${citations.length}__`;
-      citations.push(match);
-      return placeholder;
+    // Protect numbered citations [1], [2], etc.
+    const citations: Array<{match: string, pos: number}> = [];
+    const citationRegex = /\[(\d+(?:,\s*\d+)*)\]/g;
+    let match;
+    while ((match = citationRegex.exec(text)) !== null) {
+      citations.push({ match: match[0], pos: match.index });
+    }
+    
+    // Replace citations temporarily
+    let workingText = text;
+    citations.reverse().forEach((cit, idx) => {
+      const placeholder = `__CIT${idx}__`;
+      workingText = workingText.substring(0, cit.pos) + placeholder + workingText.substring(cit.pos + cit.match.length);
     });
     
-    // Now remove markdown links (but not citations)
-    cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+    // Parse bold (**text**) and italic (*text*)
+    const formatRegex = /(\*\*\*(.+?)\*\*\*|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`|~~(.+?)~~)/g;
+    let lastIndex = 0;
     
-    // Restore numbered citations
-    citations.forEach((citation, index) => {
-      cleaned = cleaned.replace(`__CITATION_${index}__`, citation);
+    while ((match = formatRegex.exec(workingText)) !== null) {
+      // Add plain text before this match
+      if (match.index > lastIndex) {
+        const plainText = workingText.substring(lastIndex, match.index);
+        if (plainText) {
+          segments.push({ text: plainText, bold: false, italic: false });
+        }
+      }
+      
+      // Add formatted text
+      if (match[2]) {
+        // Bold + Italic (***text***)
+        if (match[2].trim()) {
+          segments.push({ text: match[2], bold: true, italic: true });
+        }
+      } else if (match[3]) {
+        // Bold (**text**)
+        if (match[3].trim()) {
+          segments.push({ text: match[3], bold: true, italic: false });
+        }
+      } else if (match[4]) {
+        // Italic (*text*)
+        if (match[4].trim()) {
+          segments.push({ text: match[4], bold: false, italic: true });
+        }
+      } else if (match[5]) {
+        // Inline code (`text`) - treat as plain text without backticks
+        if (match[5].trim()) {
+          segments.push({ text: match[5], bold: false, italic: false });
+        }
+      } else if (match[6]) {
+        // Strikethrough (~~text~~) - just remove formatting
+        if (match[6].trim()) {
+          segments.push({ text: match[6], bold: false, italic: false });
+        }
+      }
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining plain text
+    if (lastIndex < workingText.length) {
+      const plainText = workingText.substring(lastIndex);
+      if (plainText.trim()) {
+        segments.push({ text: plainText, bold: false, italic: false });
+      }
+    }
+    
+    // Restore citations in segments
+    segments.forEach(segment => {
+      citations.forEach((cit, idx) => {
+        segment.text = segment.text.replace(`__CIT${idx}__`, cit.match);
+      });
     });
     
-    return cleaned;
+    // Remove markdown links [text](url) but keep the text
+    segments.forEach(segment => {
+      segment.text = segment.text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+    });
+    
+    // Remove any stray backticks that weren't part of inline code pairs
+    segments.forEach(segment => {
+      segment.text = segment.text.replace(/`/g, '');
+    });
+    
+    // Filter out empty segments after all processing
+    return segments.filter(segment => segment.text.trim().length > 0);
+  };
+
+  // Helper to render text with inline formatting
+  const renderFormattedText = (text: string, x: number, y: number, maxWidth: number, options: { align?: 'left' | 'center' | 'right' | 'justify' } = {}) => {
+    const segments = parseInlineFormatting(text);
+    let currentX = x;
+    let currentY = y;
+    let lineStartX = x;
+    
+    segments.forEach((segment, segIdx) => {
+      // Set font style
+      if (segment.bold && segment.italic) {
+        doc.setFont('helvetica', 'bolditalic');
+      } else if (segment.bold) {
+        doc.setFont('helvetica', 'bold');
+      } else if (segment.italic) {
+        doc.setFont('helvetica', 'italic');
+      } else {
+        doc.setFont('helvetica', 'normal');
+      }
+      
+      // Split text into words
+      const words = segment.text.split(/(\s+)/); // Keep whitespace
+      
+      words.forEach((word, wordIdx) => {
+        if (!word) return; // Skip empty strings
+        
+        const wordWidth = doc.getTextWidth(word);
+        
+        // Check if we need to wrap to next line
+        if (currentX + wordWidth > x + maxWidth && currentX > lineStartX && word.trim()) {
+          // Move to next line
+          currentX = lineStartX;
+          currentY += lineHeight * 0.95;
+          
+          // Check if we need a page break
+          if (currentY + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            currentY = margin;
+            yPosition = margin; // Sync yPosition with currentY
+          }
+          
+          // Skip leading whitespace on new line
+          if (word.trim() === '') return;
+        }
+        
+        // Render the word
+        doc.text(word, currentX, currentY);
+        currentX += wordWidth;
+      });
+    });
+    
+    // Reset to normal font
+    doc.setFont('helvetica', 'normal');
+    
+    return currentY;
   };
 
   // Helper to process markdown-like text
@@ -93,12 +219,14 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       }
       
       doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
       doc.setTextColor(44, 62, 80);
-      const text = cleanTextForPDF(line.replace(/^#\s+/, ''));
-      const headerLines = doc.splitTextToSize(text, contentWidth);
-      headerLines.forEach((hLine: string) => {
-        doc.text(hLine, margin, yPosition);
+      doc.setFont('helvetica', 'bold');
+      const text = line.replace(/^#\s+/, '');
+      
+      // Split long titles across multiple lines
+      const titleLines = doc.splitTextToSize(text, contentWidth);
+      titleLines.forEach((titleLine: string) => {
+        doc.text(titleLine, margin, yPosition);
         yPosition += lineHeight * 1.2;
       });
       yPosition += lineHeight * 0.5;
@@ -107,10 +235,10 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       doc.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += lineHeight * 1.5;
     } else if (line.startsWith('## ')) {
-      const text = cleanTextForPDF(line.replace(/^##\s+/, ''));
+      const text = line.replace(/^##\s+/, '');
       
       // Special formatting for "References" or "Sources" section
-      if (text.toLowerCase() === 'references' || text.toLowerCase() === 'sources' || text.toLowerCase() === 'bibliography') {
+      if (text.toLowerCase().replace(/\*\*/g, '').trim() === 'references' || text.toLowerCase().replace(/\*\*/g, '').trim() === 'sources' || text.toLowerCase().replace(/\*\*/g, '').trim() === 'bibliography') {
         // References section needs space for heading + at least 5 reference entries
         const requiredSpace = lineHeight * 12;
         if (yPosition + requiredSpace > pageHeight - margin) {
@@ -121,10 +249,14 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
         // Add extra space before Sources section
         yPosition += lineHeight;
         doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
         doc.setTextColor(44, 62, 80);
-        doc.text(text, margin, yPosition);
-        yPosition += lineHeight * 1.2;
+        doc.setFont('helvetica', 'bold');
+        const titleLines = doc.splitTextToSize(text, contentWidth);
+        titleLines.forEach((titleLine: string) => {
+          doc.text(titleLine, margin, yPosition);
+          yPosition += lineHeight * 1.1;
+        });
+        yPosition += lineHeight * 0.1;
         // Add underline for Sources
         doc.setDrawColor(44, 62, 80);
         doc.setLineWidth(0.5);
@@ -139,11 +271,11 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
         }
         
         doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
         doc.setTextColor(52, 73, 94);
-        const headerLines = doc.splitTextToSize(text, contentWidth);
-        headerLines.forEach((hLine: string) => {
-          doc.text(hLine, margin, yPosition);
+        doc.setFont('helvetica', 'bold');
+        const titleLines = doc.splitTextToSize(text, contentWidth);
+        titleLines.forEach((titleLine: string) => {
+          doc.text(titleLine, margin, yPosition);
           yPosition += lineHeight * 1.1;
         });
         yPosition += lineHeight;
@@ -157,12 +289,12 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       }
       
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
       doc.setTextColor(52, 73, 94);
-      const text = cleanTextForPDF(line.replace(/^###\s+/, ''));
-      const headerLines = doc.splitTextToSize(text, contentWidth);
-      headerLines.forEach((hLine: string) => {
-        doc.text(hLine, margin, yPosition);
+      doc.setFont('helvetica', 'bold');
+      const text = line.replace(/^###\s+/, '');
+      const titleLines = doc.splitTextToSize(text, contentWidth);
+      titleLines.forEach((titleLine: string) => {
+        doc.text(titleLine, margin, yPosition);
         yPosition += lineHeight;
       });
       yPosition += lineHeight * 0.8;
@@ -175,60 +307,55 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       }
       
       doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
       doc.setTextColor(52, 73, 94);
-      const text = cleanTextForPDF(line.replace(/^####\s+/, ''));
-      doc.text(text, margin, yPosition);
-      yPosition += lineHeight * 1.5;
-    } else if (line.match(/^[\*\-]\s/)) {
-      // Bullet points with justified text
+      doc.setFont('helvetica', 'bold');
+      const text = line.replace(/^####\s+/, '');
+      const titleLines = doc.splitTextToSize(text, contentWidth);
+      titleLines.forEach((titleLine: string) => {
+        doc.text(titleLine, margin, yPosition);
+        yPosition += lineHeight;
+      });
+      yPosition += lineHeight * 0.5;
+    } else if (line.match(/^[\s]*[\*\-]\s/)) {
+      // Bullet points with inline formatting support (including indented)
       checkPageBreak(lineHeight * 1.5);
       doc.setFontSize(10.5);
-      doc.setFont('helvetica', 'normal');
       doc.setTextColor(26, 26, 26);
-      const text = cleanTextForPDF(line.replace(/^[\*\-]\s+/, ''));
-      const bulletLines = doc.splitTextToSize(text, contentWidth - 7);
+      
+      // Detect indentation level
+      const indentMatch = line.match(/^(\s*)/);
+      const indentLevel = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0;
+      const indent = margin + (indentLevel * 10);
+      
+      const text = line.replace(/^[\s]*[\*\-]\s+/, '');
       
       // Draw bullet
       doc.setFontSize(12);
-      doc.text('•', margin + 1, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text('•', indent + 1, yPosition);
       doc.setFontSize(10.5);
       
-      bulletLines.forEach((bLine: string, idx: number) => {
-        if (idx > 0) checkPageBreak();
-        // Justify all lines except the last
-        if (idx < bulletLines.length - 1) {
-          doc.text(bLine, margin + 7, yPosition, { align: 'justify', maxWidth: contentWidth - 7 });
-        } else {
-          doc.text(bLine, margin + 7, yPosition);
-        }
-        yPosition += lineHeight * 0.95;
-      });
-      yPosition += lineHeight * 0.3;
+      yPosition = renderFormattedText(text, indent + 7, yPosition, contentWidth - (indent - margin) - 7);
+      yPosition += lineHeight * 1.25;
+      checkPageBreak(); // Check after adding spacing
     } else if (line.match(/^\d+\.\s/)) {
-      // Numbered lists with justified text (including Sources)
+      // Numbered lists with inline formatting support (including Sources)
       checkPageBreak(lineHeight * 1.5);
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
       doc.setTextColor(26, 26, 26);
       const match = line.match(/^(\d+)\.\s+(.+)$/);
       if (match) {
         const num = match[1];
-        const text = cleanTextForPDF(match[2]);
-        const numLines = doc.splitTextToSize(text, contentWidth - 12);
+        const text = match[2];
         
         // Make the number bold for sources
         doc.setFont('helvetica', 'bold');
         doc.text(`[${num}]`, margin + 1, yPosition);
         doc.setFont('helvetica', 'normal');
         
-        numLines.forEach((nLine: string, idx: number) => {
-          if (idx > 0) checkPageBreak();
-          // Don't justify source citations - keep them left-aligned for readability
-          doc.text(nLine, margin + 12, yPosition);
-          yPosition += lineHeight * 0.9;
-        });
-        yPosition += lineHeight * 0.4;
+        yPosition = renderFormattedText(text, margin + 12, yPosition, contentWidth - 12);
+        yPosition += lineHeight * 1.3;
+        checkPageBreak(); // Check after adding spacing
       }
     } else if (line.trim() === '---' || line.trim() === '***') {
       // Horizontal rule
@@ -242,47 +369,44 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       // Empty line - add spacing
       yPosition += lineHeight * 0.7;
     } else if (line.startsWith('>')) {
-      // Blockquote
+      // Blockquote with inline formatting
       checkPageBreak(lineHeight * 2);
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'italic');
       doc.setTextColor(100, 100, 100);
-      const text = cleanTextForPDF(line.replace(/^>\s*/, ''));
-      const quoteLines = doc.splitTextToSize(text, contentWidth - 8);
+      const text = line.replace(/^>\s*/, '');
       
       // Draw left border for blockquote
       doc.setDrawColor(52, 152, 219);
       doc.setLineWidth(1);
-      const quoteHeight = quoteLines.length * lineHeight * 0.95;
-      doc.line(margin, yPosition - 2, margin, yPosition + quoteHeight);
+      const startY = yPosition;
       
-      quoteLines.forEach((qLine: string) => {
-        checkPageBreak();
-        doc.text(qLine, margin + 5, yPosition);
-        yPosition += lineHeight * 0.95;
+      // Render with italic as base style
+      const segments = parseInlineFormatting(text);
+      let currentX = margin + 5;
+      segments.forEach(segment => {
+        if (segment.bold && segment.italic) {
+          doc.setFont('helvetica', 'bolditalic');
+        } else if (segment.bold) {
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setFont('helvetica', 'italic'); // Default to italic for quotes
+        }
+        doc.text(segment.text, currentX, yPosition);
+        currentX += doc.getTextWidth(segment.text + ' ');
       });
+      
+      yPosition += lineHeight * 0.95;
+      doc.line(margin, startY - 2, margin, yPosition);
       yPosition += lineHeight * 0.5;
     } else {
-      // Regular paragraph with justified alignment
+      // Regular paragraph with inline formatting support
       checkPageBreak(lineHeight * 1.5);
       doc.setFontSize(10.5);
-      doc.setFont('helvetica', 'normal');
       doc.setTextColor(26, 26, 26);
       
-      const cleanLine = cleanTextForPDF(line);
-      const textLines = doc.splitTextToSize(cleanLine, contentWidth);
-      
-      textLines.forEach((tLine: string, idx: number) => {
-        checkPageBreak();
-        // Use justify alignment for all lines except the last one in a paragraph
-        if (idx < textLines.length - 1) {
-          doc.text(tLine, margin, yPosition, { align: 'justify', maxWidth: contentWidth });
-        } else {
-          doc.text(tLine, margin, yPosition, { align: 'left' });
-        }
-        yPosition += lineHeight * 0.95;
-      });
-      yPosition += lineHeight * 0.4;
+      yPosition = renderFormattedText(line, margin, yPosition, contentWidth);
+      yPosition += lineHeight * 1.35;
+      checkPageBreak(); // Check after adding spacing
     }
   };
 
@@ -334,8 +458,15 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       yPosition += lineHeight;
     }
 
+    // Handle both escaped \n and actual newlines
+    let content = message.content;
+    // If content has escaped newlines, unescape them
+    if (content.includes('\\n') && !content.includes('\n\n')) {
+      content = content.replace(/\\n/g, '\n');
+    }
+    
     // Split message into lines and process each
-    const lines = message.content.split('\n');
+    const lines = content.split('\n');
     lines.forEach(line => {
       processMarkdownLine(line);
     });

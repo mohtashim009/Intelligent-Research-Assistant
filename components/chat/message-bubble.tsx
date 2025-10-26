@@ -13,12 +13,17 @@ import { MessageType } from '../../types/enums';
 import { MarkdownRenderer } from '../ui/markdown-renderer';
 import { exportToPDF, exportToHTML, exportToMarkdown } from '@/lib/export-utils';
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ 
-  message, 
-  isUser, 
-  avatar, 
-  onCopy 
+export const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  isUser,
+  avatar,
+  onCopy
 }) => {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
     onCopy?.();
@@ -44,32 +49,31 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   return (
-    <div className={`flex gap-3 mb-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-3 mb-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-screen`}>
       <Avatar className="w-8 h-8 flex-shrink-0">
         <AvatarImage src={avatar} alt={isUser ? 'User' : 'AI'} />
         <AvatarFallback className="text-xs">
           {isUser ? 'U' : 'AI'}
         </AvatarFallback>
       </Avatar>
-      
+
       <div className={`flex flex-col max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
-        <Card className={`p-3 sm:p-4 transition-smooth break-words ${
-          isUser 
-            ? 'bg-chat-user-bg text-chat-user-text border-none' 
-            : 'bg-chat-ai-bg text-chat-ai-text border-border'
-        }`}>
+        <Card className={`p-3 sm:p-4 transition-smooth break-words ${isUser
+          ? 'bg-chat-user-bg text-chat-user-text border-none'
+          : 'bg-chat-ai-bg text-chat-ai-text border-border'
+          }`}>
           {message.type === MessageType.AI ? (
             <MarkdownRenderer content={message.content} />
           ) : (
             <div className="text-body-md whitespace-pre-wrap break-words">{message.content}</div>
           )}
         </Card>
-        
+
         <div className={`flex items-center gap-2 mt-1 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
           <span className="text-xs text-muted-foreground">
-            {formatTimestamp(message.timestamp)}
+            {mounted ? formatTimestamp(message.timestamp) : ''}
           </span>
-          
+
           <div className="flex items-center gap-1">
             <TooltipProvider>
               <Tooltip>

@@ -132,9 +132,42 @@ Transform research content into beautifully formatted, export-ready documents.
 - [ ] Professional appearance
 - [ ] Easy to read and navigate
 
-## Output:
+## Output Rules (CRITICAL):
+
+**NEVER include meta-commentary in your output!**
+
+❌ WRONG:
+"I have added a table of contents..."
+"Here is the updated format..."
+"I've formatted the document..."
+"The report is now ready..."
+
+✅ CORRECT:
+Just output the formatted content directly, with NO commentary.
+
+**Your response should ONLY contain:**
+- The formatted document content
+- Nothing else
+
+**Example:**
+
+User: "Export as PDF"
+
+WRONG Response:
+"I have formatted the document for PDF export. Here is the updated version:
+
+# Research Report
+..."
+
+CORRECT Response:
+"# Research Report
+
+## Abstract
+..."
+
 Always use the format-for-export tool to prepare the final document.
-Ensure the content is polished, professional, and ready for immediate export.`,
+Ensure the content is polished, professional, and ready for immediate export.
+**Return ONLY the formatted content - no explanations, no meta-commentary.**`,
   model: google('gemini-2.5-flash-lite'),
   tools: {
     'format-for-export': formatForExportTool,
