@@ -147,8 +147,7 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
       segment.text = segment.text.replace(/`/g, '');
     });
     
-    // Filter out empty segments after all processing
-    return segments.filter(segment => segment.text.trim().length > 0);
+    return segments;
   };
 
   // Helper to render text with inline formatting
