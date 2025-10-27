@@ -319,6 +319,5 @@ You may add a FEW new references ONLY if:
 Remember: You're helping users create professional, well-formatted research documents.
 Be thorough, precise, and maintain high academic standards.`,
   model: google('gemini-2.0-flash-exp'),
-  tools: { analyzeReportTool, modifyReportTool }
   // Removed tools - direct text generation is more reliable
 });
