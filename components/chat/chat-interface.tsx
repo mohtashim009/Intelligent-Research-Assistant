@@ -11,16 +11,17 @@ import { MessageInput } from './message-input';
 import { ChatSidebar } from './chat-sidebar';
 import { TypingIndicator } from '../ui/typing-indicator';
 import { ExportButton } from '../ui/export-button';
+import { UserMenu } from '../auth/UserMenu';
 import { ChatInterfaceProps } from '../../types/schema';
 import { MessageType, MessageStatus, ChatStatus } from '../../types/enums';
 import { ResearchService } from '../../lib/research-service';
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  initialMessages, 
-  chatSessions, 
-  currentChatStatus, 
-  userAvatar, 
-  aiAvatar 
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  initialMessages,
+  chatSessions,
+  currentChatStatus,
+  userAvatar,
+  aiAvatar
 }) => {
   const [messages, setMessages] = useState(initialMessages);
   const [chatStatus, setChatStatus] = useState(currentChatStatus);
@@ -33,26 +34,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Detect operation type from user message
   const detectOperationType = (message: string): string => {
     const lowerMessage = message.toLowerCase();
-    
+
     // Draft/Modification operations
-    if (lowerMessage.includes('convert') || 
-        lowerMessage.includes('change format') ||
-        lowerMessage.includes('add a section') ||
-        lowerMessage.includes('add section') ||
-        lowerMessage.includes('modify') ||
-        lowerMessage.includes('restructure') ||
-        lowerMessage.includes('enhance') ||
-        lowerMessage.includes('update')) {
+    if (lowerMessage.includes('convert') ||
+      lowerMessage.includes('change format') ||
+      lowerMessage.includes('add a section') ||
+      lowerMessage.includes('add section') ||
+      lowerMessage.includes('modify') ||
+      lowerMessage.includes('restructure') ||
+      lowerMessage.includes('enhance') ||
+      lowerMessage.includes('update')) {
       return 'Drafting in progress...';
     }
-    
+
     // Export operations
-    if (lowerMessage.includes('export') || 
-        lowerMessage.includes('download') ||
-        lowerMessage.includes('save as')) {
+    if (lowerMessage.includes('export') ||
+      lowerMessage.includes('download') ||
+      lowerMessage.includes('save as')) {
       return 'Preparing export...';
     }
-    
+
     // Research operations (default)
     return 'Conducting deep research...';
   };
@@ -96,7 +97,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
 
     setMessages(prev => [...prev, userMessage]);
-    
+
     // Detect operation type and set appropriate loading message
     const operationMessage = detectOperationType(content);
     setLoadingMessage(operationMessage);
@@ -104,13 +105,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     // Generate AI response using research service if in deep research mode
     console.log('Deep research mode:', deepResearchMode);
-    
+
     if (deepResearchMode) {
       console.log('Using research service for query:', content);
-      
+
       try {
         const aiResponse = await ResearchService.generateResearchMessage(content);
-        
+
         const aiMessage = {
           id: (Date.now() + 1).toString(),
           content: aiResponse,
@@ -123,7 +124,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setChatStatus(ChatStatus.IDLE);
       } catch (error) {
         console.error('Research service error:', error);
-        
+
         // Fallback to mock responses if research service fails
         const aiResponses = [
           "I apologize, but I'm currently unable to access real-time research data. Here's a general response based on my knowledge:\n\n## Research Insights\n\n• **Key Finding 1**: General information about the topic\n• **Key Finding 2**: Additional context and background\n• **Key Finding 3**: Related areas of interest\n\n> **Note**: For the most current research, please ensure your API keys are properly configured.\n\nWould you like me to approach this from a different angle?",
@@ -131,7 +132,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ];
 
         const fallbackResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-        
+
         const aiMessage = {
           id: (Date.now() + 1).toString(),
           content: fallbackResponse,
@@ -155,7 +156,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ];
 
         const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-        
+
         const aiMessage = {
           id: (Date.now() + 1).toString(),
           content: randomResponse,
@@ -189,118 +190,122 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-  <div className="min-h-dvh w-full relative bg-black z-10">
-    {/* X Organizations Black Background with Top Glow */}
-    <div
-      className="fixed inset-0 -z-10 pointer-events-none"
-      style={{
-       background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 180, 255, 0.25), transparent 70%), #000000",
-      }}
-    />
-  
-    <div className="min-h-dvh bg-background flex">
-      {/* Desktop Sidebar */}
-      <div className="fixed z-10 hidden lg:block w-80 h-full">
-        <ChatSidebar
-          sessions={chatSessions}
-          currentSessionId={currentSessionId}
-          onSessionSelect={handleSessionSelect}
-          onNewChat={handleNewChat}
-        />
-      </div>
+    <div className="min-h-dvh w-full relative bg-black z-10">
+      {/* X Organizations Black Background with Top Glow */}
+      <div
+        className="fixed inset-0 -z-10 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 180, 255, 0.25), transparent 70%), #000000",
+        }}
+      />
 
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
+      <div className="min-h-dvh bg-background flex">
+        {/* Desktop Sidebar */}
+        <div className="fixed z-10 hidden lg:block w-80 h-full">
           <ChatSidebar
             sessions={chatSessions}
             currentSessionId={currentSessionId}
             onSessionSelect={handleSessionSelect}
             onNewChat={handleNewChat}
           />
-        </SheetContent>
-      </Sheet>
+        </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full lg:ml-80">
-        {/* Header */}
-        <Card className="sticky top-0 z-10 p-4 pt-[env(safe-area-inset-top)] border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60 flex items-center gap-3">
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden">
-                <Bars3CenterLeftIcon className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-          </Sheet>
-          
-          <div className="flex-1">
-            <h1 className="text-heading-md text-foreground">
-              Research Assistant
-            </h1>
-            <p className="text-body-sm text-muted-foreground">
-              How can I help you with your research today?
-            </p>
-          </div>
-          
-          <ExportButton 
-            messages={messages} 
-            conversationTitle="Research Report"
-          />
-        </Card>
+        {/* Mobile Sidebar */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
+            <ChatSidebar
+              sessions={chatSessions}
+              currentSessionId={currentSessionId}
+              onSessionSelect={handleSessionSelect}
+              onNewChat={handleNewChat}
+            />
+          </SheetContent>
+        </Sheet>
 
-        {/* Messages Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 sm:p-4">
-            <div className="max-w-4xl mx-auto px-2 sm:px-0 pb-28 sm:pb-32">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <h2 className="text-heading-lg text-foreground mb-2">
-                      Welcome to your Research Assistant
-                    </h2>
-                    <p className="text-body-md text-muted-foreground">
-                      Start a conversation by typing your research question below.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isUser={message.type === MessageType.USER}
-                      avatar={message.type === MessageType.USER ? userAvatar : aiAvatar}
-                      onCopy={handleCopyMessage}
-                    />
-                  ))}
-                  
-                  {chatStatus === ChatStatus.THINKING && (
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
-                        AI
-                      </div>
-                      <TypingIndicator message={loadingMessage} />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col h-full lg:ml-80">
+          {/* Header */}
+          <Card className="sticky top-0 z-10 p-4 pt-[env(safe-area-inset-top)] border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <div className="flex items-center gap-3">
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="lg:hidden">
+                    <Bars3CenterLeftIcon className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+              </Sheet>
 
-          {/* Input Area */}
-          <div className="p-3 sm:p-4 pb-[env(safe-area-inset-bottom)] border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky bottom-0">
-            <div className="max-w-4xl mx-auto px-2 sm:px-0">
-              <MessageInput
-                onSendMessage={handleSendMessage}
-                disabled={chatStatus === ChatStatus.THINKING}
-                placeholder="Ask me anything about your research..."
+              <div className="flex-1 min-w-0">
+                <h1 className="text-heading-md text-foreground truncate">
+                  Research Assistant
+                </h1>
+                <p className="text-body-sm text-muted-foreground hidden sm:block">
+                  {messages.length} message{messages.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <ExportButton
+                messages={messages}
+                conversationTitle="Research Report"
               />
+
+              <UserMenu />
+            </div>
+          </Card>
+
+          {/* Messages Area */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 sm:p-4">
+              <div className="max-w-4xl mx-auto px-2 sm:px-0 pb-28 sm:pb-32">
+                {messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <h2 className="text-heading-lg text-foreground mb-2">
+                        Welcome to your Research Assistant
+                      </h2>
+                      <p className="text-body-md text-muted-foreground">
+                        Start a conversation by typing your research question below.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <MessageBubble
+                        key={message.id}
+                        message={message}
+                        isUser={message.type === MessageType.USER}
+                        avatar={message.type === MessageType.USER ? userAvatar : aiAvatar}
+                        onCopy={handleCopyMessage}
+                      />
+                    ))}
+
+                    {chatStatus === ChatStatus.THINKING && (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
+                          AI
+                        </div>
+                        <TypingIndicator message={loadingMessage} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Input Area */}
+            <div className="p-3 sm:p-4 pb-[env(safe-area-inset-bottom)] border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky bottom-0">
+              <div className="max-w-4xl mx-auto px-2 sm:px-0">
+                <MessageInput
+                  onSendMessage={handleSendMessage}
+                  disabled={chatStatus === ChatStatus.THINKING}
+                  placeholder="Ask me anything about your research..."
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   );
 };

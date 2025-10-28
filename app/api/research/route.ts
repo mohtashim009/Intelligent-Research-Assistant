@@ -5,9 +5,10 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { query, threadId, resourceId } = body;
+    const { query, threadId, resourceId, conversationHistory } = body;
 
     console.log('Research query received:', query);
+    console.log('Conversation history length:', conversationHistory?.length || 0);
 
     if (!query) {
       console.log('Research API error: Query is required');
@@ -23,8 +24,26 @@ export async function POST(request: Request) {
     // Track progress logs
     const progressLogs: string[] = [];
 
+    // Build messages array with conversation history
+    const messages: any[] = [];
+    
+    // Add conversation history if provided (last 5 messages for context)
+    if (conversationHistory && conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-5); // Last 5 messages
+      messages.push(...recentHistory.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+      })));
+    }
+    
+    // Add current query
+    messages.push({
+      role: 'user',
+      content: query,
+    });
+
     // Generate response with memory context and step logging
-    const result = await masterAgent.generate(query, {
+    const result = await masterAgent.generate(messages, {
       memory: threadId && resourceId ? {
         thread: threadId,
         resource: resourceId,

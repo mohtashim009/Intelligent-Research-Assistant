@@ -12,7 +12,7 @@ const googleEmbedding = google.textEmbeddingModel('text-embedding-004');
 // Configure vector store for semantic recall
 // Use remote Turso database on Vercel, local file in development
 const isVercel = process.env.VERCEL === '1';
-const connectionUrl = isVercel 
+const connectionUrl = isVercel
   ? process.env.TURSO_DATABASE_URL || 'memory-disabled' // Use Turso on Vercel
   : 'file:./mastra-memory.db'; // Use local file in development
 
@@ -267,7 +267,7 @@ You: "Please paste your report first"
 ❌ This is WRONG - the report is already in memory from the previous research!
 
 Remember: Execute immediately, return complete results, never just acknowledge tasks.`,
-  model: google('gemini-2.5-flash-lite'),
+  model: google('gemini-2.5-flash'), // Use exp model for better handling of long contexts
   agents: {
     researchAgent,
     exportAgent,

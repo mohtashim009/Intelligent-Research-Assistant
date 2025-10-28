@@ -26,7 +26,14 @@ function filterAIMessages(messages: Message[]): Message[] {
 
 export async function exportToPDF(messages: Message[], conversationTitle: string = 'Research Report'): Promise<void> {
   // Dynamic import to avoid SSR issues
-  const jsPDF = (await import('jspdf')).default;
+  let jsPDF;
+  try {
+    const jsPDFModule = await import('jspdf');
+    jsPDF = jsPDFModule.default || jsPDFModule;
+  } catch (error) {
+    console.error('Failed to load jsPDF:', error);
+    throw new Error('PDF export is not available. Please try HTML or Markdown export instead.');
+  }
   
   const doc = new jsPDF({
     orientation: 'portrait',

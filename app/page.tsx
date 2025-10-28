@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { ChatInterface } from '../components/chat/chat-interface';
-import { mockRootProps } from '../data/chatMockData';
+import { ChatInterfaceWithPersistence } from '../components/chat/ChatInterfaceWithPersistence';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 export default function ChatAIPage() {
   return (
-    <div className="w-full min-h-dvh">
-      <ChatInterface {...mockRootProps} />
-    </div>
+    <ProtectedRoute>
+      <ChatInterfaceWithPersistence />
+    </ProtectedRoute>
   );
 }

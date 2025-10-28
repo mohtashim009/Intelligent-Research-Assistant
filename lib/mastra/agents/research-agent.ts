@@ -269,7 +269,7 @@ Query: "AI in healthcare"
 
 ## FINAL REMINDER BEFORE YOU START:
 When you finish writing, COUNT your references. If you have more than 15, you MUST remove the least important ones until you have 15 or fewer. This is NON-NEGOTIABLE.`,
-   model: google('gemini-2.5-flash-lite'),
+   model: google('gemini-2.5-flash'),
    tools: {
       // Primary tools - use these first
       ...serpApiTools,

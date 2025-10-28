@@ -28,7 +28,10 @@ export class ResearchService {
   /**
    * Generate research message with conversation context
    */
-  static async generateResearchMessage(query: string): Promise<string> {
+  static async generateResearchMessage(
+    query: string, 
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
+  ): Promise<string> {
     console.log('Research service called with query:', query);
     
     try {
@@ -43,6 +46,7 @@ export class ResearchService {
           query,
           threadId,
           resourceId,
+          conversationHistory, // Pass conversation history
         }),
       });
 

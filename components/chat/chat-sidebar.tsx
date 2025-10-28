@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { PlusCircleIcon, Cog6ToothIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { ChatSidebarProps } from '../../types/schema';
 import { formatMessageTime } from '../../utils/formatters';
 
@@ -14,7 +14,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   sessions, 
   currentSessionId, 
   onSessionSelect, 
-  onNewChat 
+  onNewChat,
+  onDeleteSession
 }) => {
   return (
     <div className="h-full bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -46,7 +47,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
             {sessions.map((session) => (
               <Card
                 key={session.id}
-                className={`p-3 cursor-pointer transition-smooth border-none ${
+                className={`p-3 cursor-pointer transition-smooth border-none group relative ${
                   currentSessionId === session.id
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent/50'
@@ -58,9 +59,26 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <h3 className="text-body-sm font-medium truncate flex-1">
                       {session.title}
                     </h3>
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {session.messageCount}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {session.messageCount}
+                      </Badge>
+                      {onDeleteSession && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete this chat session?')) {
+                              onDeleteSession(session.id);
+                            }
+                          }}
+                        >
+                          <TrashIcon className="h-3 w-3 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   <p className="text-xs text-muted-foreground truncate">

@@ -40,9 +40,10 @@ export interface MessageInputProps {
 
 export interface ChatSidebarProps {
   sessions: ChatSession[];
-  currentSessionId?: string;
+  currentSessionId?: string | null;
   onSessionSelect: (sessionId: string) => void;
   onNewChat: () => void;
+  onDeleteSession?: (sessionId: string) => void;
 }
 
 // Store types for global state
