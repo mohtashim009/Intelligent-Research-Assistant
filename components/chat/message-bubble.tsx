@@ -49,22 +49,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   return (
-    <div className={`flex gap-3 mb-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-screen`}>
-      <Avatar className={`w-8 h-8 flex-shrink-0 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+    <div className={`flex gap-2 sm:gap-3 mb-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {/* Hide avatars on mobile for better spacing, show on desktop */}
+      <Avatar className={`w-8 h-8 flex-shrink-0 hidden sm:flex ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
         <AvatarFallback className="text-xs">
           {avatar}
         </AvatarFallback>
       </Avatar>
 
-      <div className={`flex flex-col max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
-        <Card className={`p-3 sm:p-4 transition-smooth break-words ${isUser
-          ? 'bg-chat-user-bg text-chat-user-text border-none'
-          : 'bg-chat-ai-bg text-chat-ai-text border-border'
-          }`}>
+      <div className={`flex flex-col flex-1 min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
+        <Card className={`p-3 sm:p-4 transition-smooth ${
+          isUser 
+            ? 'max-w-[95%] sm:max-w-[80%] bg-chat-user-bg text-chat-user-text border-none' 
+            : 'max-w-[95%] sm:max-w-[80%] bg-chat-ai-bg text-chat-ai-text border-border'
+          }`} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', overflow: 'hidden' }}>
           {message.type === MessageType.AI ? (
             <MarkdownRenderer content={message.content} />
           ) : (
-            <div className="text-body-md whitespace-pre-wrap break-words">{message.content}</div>
+            <div className="text-body-md whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{message.content}</div>
           )}
         </Card>
 

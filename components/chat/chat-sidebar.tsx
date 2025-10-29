@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircleIcon, Cog6ToothIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { ChatSidebarProps } from '../../types/schema';
 import { formatMessageTime } from '../../utils/formatters';
+import { UserMenu } from '../auth/UserMenu';
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ 
   sessions, 
@@ -98,6 +99,10 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       {/* Footer */}
       <div className="p-4 border-t border-sidebar-border">
         <Separator className="mb-4" />
+        
+        <div className="lg:hidden mb-3">
+          <UserMenu />
+        </div>
         
         <Button 
           variant="ghost" 

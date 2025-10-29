@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,7 +30,11 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted p-4">
+    <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">AI Research Assistant</h1>

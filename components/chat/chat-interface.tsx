@@ -12,6 +12,7 @@ import { ChatSidebar } from './chat-sidebar';
 import { TypingIndicator } from '../ui/typing-indicator';
 import { ExportButton } from '../ui/export-button';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/theme-toggle';
 import { ChatInterfaceProps } from '../../types/schema';
 import { MessageType, MessageStatus, ChatStatus } from '../../types/enums';
 import { ResearchService } from '../../lib/research-service';
@@ -190,7 +191,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="min-h-dvh w-full relative bg-black z-10">
+    <div className="min-h-dvh w-full max-w-full relative bg-black z-10 overflow-x-hidden">
       {/* X Organizations Black Background with Top Glow */}
       <div
         className="fixed inset-0 -z-10 pointer-events-none"
@@ -199,7 +200,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }}
       />
 
-      <div className="min-h-dvh bg-background flex">
+      <div className="min-h-dvh bg-background flex max-w-full overflow-x-hidden">
         {/* Desktop Sidebar */}
         <div className="fixed z-10 hidden lg:block w-80 h-full">
           <ChatSidebar
@@ -223,7 +224,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </Sheet>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col h-full lg:ml-80">
+        <div className="flex-1 flex flex-col h-full lg:ml-80 max-w-full overflow-x-hidden">
           {/* Header */}
           <Card className="sticky top-0 z-10 p-4 pt-[env(safe-area-inset-top)] border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
             <div className="flex items-center gap-3">
@@ -244,19 +245,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </p>
               </div>
 
-              <ExportButton
-                messages={messages}
-                conversationTitle="Research Report"
-              />
+              {messages.length > 0 && (
+                <ExportButton
+                  messages={messages}
+                  conversationTitle="Research Report"
+                />
+              )}
 
-              <UserMenu />
+              <ThemeToggle />
+
+              <div className="hidden lg:block">
+                <UserMenu />
+              </div>
             </div>
           </Card>
 
           {/* Messages Area */}
           <div className="flex-1 flex flex-col min-h-0">
             <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 sm:p-4">
-              <div className="max-w-4xl mx-auto px-2 sm:px-0 pb-28 sm:pb-32">
+              <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-28 sm:pb-32">
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
