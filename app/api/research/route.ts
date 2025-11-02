@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     // Build messages array with conversation history
     const messages: any[] = [];
-    
+
     // Add conversation history if provided (last 5 messages for context)
     if (conversationHistory && conversationHistory.length > 0) {
       const recentHistory = conversationHistory.slice(-5); // Last 5 messages
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         content: msg.content,
       })));
     }
-    
+
     // Add current query
     messages.push({
       role: 'user',

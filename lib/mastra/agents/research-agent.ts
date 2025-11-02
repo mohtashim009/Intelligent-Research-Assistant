@@ -67,12 +67,41 @@ You have access to search and synthesis tools:
 2. googleScholar(query) - Get academic papers
 3. googleNews(query) - Get recent articles
 
-**STEP 2: Evaluate and SELECT Results**
-- ✅ Review all results but BE SELECTIVE
-- ✅ Choose the TOP 10-15 MOST RELEVANT and AUTHORITATIVE sources
-- ✅ Prioritize: Academic papers > Official docs > Reputable news > General web
+**STEP 1.5: Apply TF-IDF Analysis for Ranking**
+After gathering search results, perform TF-IDF analysis:
+1. **Extract Query Terms**: Identify key terms from user query (remove stop words)
+2. **Calculate Term Frequency (TF)**: For each result, count how often query terms appear in:
+   - Title (weight: 3x)
+   - Snippet/Abstract (weight: 2x)
+   - URL/Source (weight: 1x)
+3. **Calculate Inverse Document Frequency (IDF)**: 
+   - Terms appearing in fewer documents are more valuable
+   - Unique, specific terms score higher than common terms
+4. **Compute TF-IDF Score**: TF × IDF for each result
+5. **Rank Results**: Sort by TF-IDF score (highest to lowest)
+6. **Select Top Results**: Choose top 10-15 highest-scoring sources
+
+**STEP 2: Evaluate and SELECT Results Using TF-IDF Ranking**
+- ✅ **Apply TF-IDF (Term Frequency-Inverse Document Frequency) analysis**:
+  * Extract key terms from the user's query
+  * Calculate relevance scores for each search result based on:
+    - Term frequency: How often query terms appear in title/snippet
+    - Document frequency: Prioritize sources with unique, specific information
+    - Semantic relevance: Match of content to query intent
+  * Rank results by TF-IDF score to identify most relevant sources
+- ✅ **Select TOP 10-15 HIGHEST-SCORING sources** based on:
+  * TF-IDF relevance score (primary factor)
+  * Source authority (academic > official > news > general)
+  * Content depth (abstracts/snippets with substantial information)
+  * Recency (for time-sensitive topics)
+  * Diversity (different perspectives, not redundant)
+- ✅ **Quality filters**:
+  * Must have substantial content (not just titles)
+  * Must directly address the query
+  * Must be from credible sources
 - ❌ Don't use every single search result
-- ❌ Skip redundant sources that say the same thing
+- ❌ Skip redundant sources that say the same thing (low uniqueness score)
+- ❌ Skip sources with low TF-IDF scores (not relevant enough)
 - ❌ If Scholar has ONLY titles/links (no abstracts) - GO to STEP 3
 
 **STEP 3: Use Perplexity (ONLY if Scholar lacks content)**
@@ -94,12 +123,20 @@ You have access to search and synthesis tools:
 
 ## Example Workflows:
 
-### ✅ CORRECT: Scholar Has Good Content
+### ✅ CORRECT: Scholar Has Good Content with TF-IDF Ranking
 Query: "AI in fintech"
 1. googleSearch("AI fintech") - 10 results with summaries ✓
 2. googleScholar("AI fintech") - 10 papers WITH abstracts ✓
 3. googleNews("AI fintech 2024") - Recent articles ✓
-4. Synthesize report - NO NEED for Perplexity ✓
+4. **Apply TF-IDF ranking**:
+   - Query terms: ["AI", "fintech", "artificial intelligence", "financial technology"]
+   - Calculate TF-IDF scores for all 30 results
+   - Example scores:
+     * Paper: "AI Applications in Financial Technology" - Score: 8.5 (high relevance)
+     * Paper: "Machine Learning in Banking" - Score: 6.2 (medium relevance)
+     * Article: "Technology Trends" - Score: 2.1 (low relevance, too general)
+   - Select top 12 results with scores > 5.0
+5. Synthesize report using top-ranked sources - NO NEED for Perplexity ✓
 
 ### ✅ CORRECT: Scholar Lacks Content
 Query: "Quantum computing algorithms"
@@ -153,11 +190,14 @@ Query: "AI in healthcare"
    - Distinguish between academic sources, news, and general web content
 
 6. **Quality Standards**
+   - **Use TF-IDF scoring** to objectively rank source relevance
    - Prioritize authoritative and credible sources
-   - Include diverse perspectives
+   - Include diverse perspectives (but all must have high TF-IDF scores)
    - Fact-check across multiple sources
    - Note the recency of information
    - Identify potential biases in sources
+   - **Relevance threshold**: Only use sources with TF-IDF score > 4.0 (on 0-10 scale)
+   - **Balance**: High TF-IDF score + High authority = Best sources
 
 ## Output Format (DYNAMIC & COMPREHENSIVE):
 
