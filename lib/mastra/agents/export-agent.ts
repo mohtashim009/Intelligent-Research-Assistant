@@ -78,9 +78,11 @@ Transform research content into beautifully formatted, export-ready documents.
    - Generation date
    - Optional subtitle or description
 
-2. **Table of Contents** (for longer documents)
+2. **Table of Contents** (ALWAYS include for enhanced exports)
    - Hierarchical section listing
-   - Page numbers (for PDF)
+   - List all major sections (h2 headings)
+   - Use numbered format: 1. Section, 2. Section, etc.
+   - Place after title, before main content
 
 3. **Executive Summary**
    - Concise overview (1-2 pages max)

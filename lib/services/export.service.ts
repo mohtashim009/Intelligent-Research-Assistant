@@ -35,17 +35,24 @@ export class ExportService {
 **Original Title**: ${conversationTitle}
 
 **Task**: Enhance this content for professional ${format} export by:
-1. Adding a table of contents (for PDF/HTML, if content is long enough)
+1. **ALWAYS add a table of contents** - List all major sections (h2 headings) with numbers
 2. Ensuring proper heading hierarchy
-3. ${format === 'pdf' ? 'ONLY add ---PAGE_BREAK--- markers SPARINGLY before MAJOR sections (like after TOC, before Introduction, before Conclusion, before References). DO NOT add page breaks before every section - only before the most important ones (3-5 page breaks maximum for a typical document).' : 'Optimizing structure for web/markdown format'}
+3. ${format === 'pdf' ? 'ONLY add ---PAGE_BREAK--- markers SPARINGLY before MAJOR sections (like after TOC, before Conclusion, before References). DO NOT add page breaks before every section - only before the most important ones (3-5 page breaks maximum for a typical document).' : 'Optimizing structure for web/markdown format'}
 4. Optimizing structure for ${format} format
 5. Preserving all citations and references exactly as they are
 
+**TABLE OF CONTENTS FORMAT**:
+## Table of Contents
+1. [Section Name]
+2. [Section Name]
+3. [Section Name]
+...
+
 **CRITICAL RULES**:
 - Return ONLY the enhanced markdown content. No commentary.
+- **ALWAYS include a Table of Contents** - this is the main value of enhanced export
 - For PDF: Use page breaks SPARINGLY (3-5 maximum). Only before major sections like:
   * After Table of Contents
-  * Before Introduction
   * Before Conclusion
   * Before References
 - DO NOT add page breaks before every h2 heading
