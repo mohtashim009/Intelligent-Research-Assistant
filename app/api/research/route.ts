@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         thread: threadId,
         resource: resourceId,
       } : undefined,
-      maxSteps: 20, // Allow multiple agent interactions (master -> research -> tools -> synthesis)
+      maxSteps: 10, // Reduced to prevent infinite loops (master -> research -> tools)
       onStepFinish: (step) => {
         // Log tool calls
         if (step.toolCalls && step.toolCalls.length > 0) {

@@ -101,7 +101,14 @@ Transform research content into beautifully formatted, export-ready documents.
 ### Format-Specific Guidelines:
 
 #### PDF Format:
-- Use page breaks before major sections
+- **IMPORTANT**: Use page breaks SPARINGLY (3-5 maximum per document)
+- ONLY add ---PAGE_BREAK--- markers before MAJOR sections:
+  * After Table of Contents
+  * Before Introduction (if document is long)
+  * Before Conclusion
+  * Before References
+- DO NOT add page breaks before every h2 heading
+- Let natural page flow handle most breaks
 - Ensure proper margins (20mm all sides)
 - Maintain consistent line spacing (1.5 or 1.6)
 - Use professional fonts

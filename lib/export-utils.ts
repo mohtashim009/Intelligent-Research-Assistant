@@ -19,12 +19,37 @@ async function markdownToHtml(markdown: string): Promise<string> {
   }
 }
 
+/**
+ * Simple content preparation for export
+ * Adds basic structure improvements without AI enhancement
+ * 
+ * NOTE: For AI-enhanced exports with table of contents and smart page breaks,
+ * use the server-side export API endpoint at /api/export
+ */
+function prepareContentForExport(
+  content: string,
+  format: 'pdf' | 'html' | 'markdown'
+): string {
+  // Basic preparation - just return content as-is
+  // AI enhancement happens server-side via /api/export endpoint
+  return content;
+}
+
 // Filter messages to only include AI responses (no User: or AI: labels)
 function filterAIMessages(messages: Message[]): Message[] {
   return messages.filter(msg => msg.type === MessageType.AI);
 }
 
 export async function exportToPDF(messages: Message[], conversationTitle: string = 'Research Report'): Promise<void> {
+  // Filter to only AI messages
+  const aiMessages = filterAIMessages(messages);
+  
+  // Combine messages into single document
+  let rawContent = aiMessages.map(msg => msg.content).join('\n\n---\n\n');
+  
+  // Prepare content (basic preparation, no AI enhancement on client-side)
+  const enhancedContent = prepareContentForExport(rawContent, 'pdf');
+  
   // Dynamic import to avoid SSR issues
   let jsPDF;
   try {
@@ -215,6 +240,13 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
 
   // Helper to process markdown-like text
   const processMarkdownLine = (line: string) => {
+    // Handle page break markers (don't render them, just add page break)
+    if (line.includes('---PAGE_BREAK---') || line.includes('---PAGE-BREAK---')) {
+      doc.addPage();
+      yPosition = margin + 10;
+      return; // Don't render the marker itself
+    }
+    
     // Check for headers
     if (line.startsWith('# ')) {
       // H1 needs space for heading + underline + at least 3 lines of content
@@ -454,28 +486,17 @@ export async function exportToPDF(messages: Message[], conversationTitle: string
   doc.addPage();
   yPosition = margin + 10;
 
-  // Filter to only AI messages
-  const aiMessages = filterAIMessages(messages);
-
-  // Process each AI message
-  aiMessages.forEach((message, index) => {
-    if (index > 0) {
-      checkPageBreak(lineHeight * 2);
-      yPosition += lineHeight;
-    }
-
-    // Handle both escaped \n and actual newlines
-    let content = message.content;
-    // If content has escaped newlines, unescape them
-    if (content.includes('\\n') && !content.includes('\n\n')) {
-      content = content.replace(/\\n/g, '\n');
-    }
-    
-    // Split message into lines and process each
-    const lines = content.split('\n');
-    lines.forEach(line => {
-      processMarkdownLine(line);
-    });
+  // Process enhanced content
+  // Handle both escaped \n and actual newlines
+  let content = enhancedContent;
+  if (content.includes('\\n') && !content.includes('\n\n')) {
+    content = content.replace(/\\n/g, '\n');
+  }
+  
+  // Split into lines and process each
+  const lines = content.split('\n');
+  lines.forEach(line => {
+    processMarkdownLine(line);
   });
 
   // Add footer with page numbers
@@ -496,10 +517,17 @@ export async function exportToHTML(messages: Message[], conversationTitle: strin
   // Filter to only AI messages
   const aiMessages = filterAIMessages(messages);
   
-  // Convert all markdown content to HTML
-  const htmlContents = await Promise.all(
-    aiMessages.map(msg => markdownToHtml(msg.content))
-  );
+  // Combine messages into single document
+  const rawContent = aiMessages.map(msg => msg.content).join('\n\n---\n\n');
+  
+  // Prepare content (basic preparation)
+  let enhancedContent = prepareContentForExport(rawContent, 'html');
+  
+  // Remove page break markers (they're for PDF only)
+  enhancedContent = enhancedContent.replace(/---PAGE[-_]BREAK---/g, '');
+  
+  // Convert markdown to HTML
+  const htmlContent = await markdownToHtml(enhancedContent);
   
   const htmlDoc = `
 <!DOCTYPE html>
@@ -717,7 +745,7 @@ export async function exportToHTML(messages: Message[], conversationTitle: strin
   </div>
   
   <div class="content">
-    ${htmlContents.join('\n<hr>\n')}
+    ${htmlContent}
   </div>
 </body>
 </html>
@@ -739,16 +767,19 @@ export async function exportToMarkdown(messages: Message[], conversationTitle: s
   // Filter to only AI messages
   const aiMessages = filterAIMessages(messages);
   
+  // Combine messages into single document
+  const rawContent = aiMessages.map(msg => msg.content).join('\n\n---\n\n');
+  
+  // Prepare content (basic preparation)
+  let enhancedContent = prepareContentForExport(rawContent, 'markdown');
+  
+  // Remove page break markers (they're for PDF only)
+  enhancedContent = enhancedContent.replace(/---PAGE[-_]BREAK---/g, '');
+  
   let markdown = `# ${conversationTitle}\n\n`;
   markdown += `*Generated on ${new Date().toLocaleString()}*\n\n`;
   markdown += `---\n\n`;
-
-  aiMessages.forEach((message, index) => {
-    if (index > 0) {
-      markdown += `\n---\n\n`;
-    }
-    markdown += `${message.content}\n\n`;
-  });
+  markdown += enhancedContent;
 
   // Create and download the markdown file
   const blob = new Blob([markdown], { type: 'text/markdown' });
