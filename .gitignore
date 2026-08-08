@@ -41,3 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /dist
+
+# Mastra local memory database
+mastra-memory.db
+mastra-memory.db-shm
+mastra-memory.db-wal
