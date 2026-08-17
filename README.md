@@ -31,9 +31,7 @@ The application combines multi-source research, AI-powered synthesis, persistent
 
 ## Demo Video
 
-A short walkthrough of the complete research workflow will be added here.
-
-> Demo video: Coming soon
+▶️ [Watch the Intelligent Research Assistant Demo on Loom](https://www.loom.com/share/a2119070da0e40c0b80afda49d2ad7b0?t=107)
 
 ---
 
