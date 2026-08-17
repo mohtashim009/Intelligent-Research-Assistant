@@ -1,5 +1,5 @@
 import { Agent } from '@mastra/core/agent';
-import { google } from '@ai-sdk/google';
+import { google } from '@ai-sdk/google-v5';
 import { serpApiTools } from '../serpapi-tool';
 import { perplexityTools } from '../perplexity-direct';
 
@@ -309,7 +309,7 @@ Query: "AI in healthcare"
 
 ## FINAL REMINDER BEFORE YOU START:
 When you finish writing, COUNT your references. If you have more than 15, you MUST remove the least important ones until you have 15 or fewer. This is NON-NEGOTIABLE.`,
-   model: google('gemini-2.5-flash'),
+   model: google('gemini-3.5-flash-lite'),
    tools: {
       // Primary tools - use these first
       ...serpApiTools,

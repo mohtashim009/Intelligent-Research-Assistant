@@ -1,13 +1,13 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { google } from '@ai-sdk/google';
+import { google } from '@ai-sdk/google-v5';
 import { LibSQLVector } from '@mastra/libsql';
 import { researchAgent } from './research-agent';
 import { exportAgent } from './export-agent';
 import { draftAgent } from './draft-agent';
 
 // Use Google's embedding model (generous free tier)
-const googleEmbedding = google.textEmbeddingModel('text-embedding-004');
+const googleEmbedding = google.textEmbeddingModel('gemini-embedding-2');
 
 // Configure vector store for semantic recall
 // Use remote Turso database on Vercel, local file in development
@@ -293,7 +293,7 @@ You: "Please paste your report first"
 ❌ This is WRONG - the report is already in memory from the previous research!
 
 Remember: Execute immediately, return complete results, never just acknowledge tasks.`,
-  model: google('gemini-2.5-flash'), // Use exp model for better handling of long contexts
+  model: google('gemini-3.6-flash'), // Current stable Gemini model
   agents: {
     researchAgent,
     exportAgent,
@@ -307,7 +307,7 @@ Remember: Execute immediately, return complete results, never just acknowledge t
       options: {
         lastMessages: 20, // Keep last 20 messages for context
         workingMemory: {
-          enabled: true,
+          enabled: false,
           template: `# Conversation Context
 
 ## User Information

@@ -1,4 +1,4 @@
-import { mastra } from '@/lib/mastra';
+import { mastra, researchAgent } from '@/lib/mastra';
 
 export async function POST(request: Request) {
   console.log('Research API route called');
@@ -18,8 +18,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the master agent to handle routing to appropriate sub-agents
-    const masterAgent = mastra.getAgent('masterAgent');
+	// Research requests are handled directly by the Research Agent.
+	// This avoids the Master Agent repeatedly invoking the Research Agent.
+	const agent = researchAgent;
 
     // Track progress logs
     const progressLogs: string[] = [];
@@ -43,12 +44,13 @@ export async function POST(request: Request) {
     });
 
     // Generate response with memory context and step logging
-    const result = await masterAgent.generate(messages, {
+    const result = await agent.generate(messages, {
+	maxOutputTokens: 4096,
       memory: threadId && resourceId ? {
         thread: threadId,
         resource: resourceId,
       } : undefined,
-      maxSteps: 10, // Reduced to prevent infinite loops (master -> research -> tools)
+      maxSteps: 5, // Reduced to prevent infinite loops (master -> research -> tools)
       onStepFinish: (step) => {
         // Log tool calls
         if (step.toolCalls && step.toolCalls.length > 0) {
