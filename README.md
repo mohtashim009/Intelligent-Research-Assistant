@@ -1,292 +1,721 @@
-# AI Research Assistant
+# Intelligent Research Assistant
 
-A sophisticated Next.js application that provides intelligent, multi-source research capabilities powered by AI agents. The system conducts deep research using multiple search engines and academic sources, synthesizes information, and generates comprehensive, well-cited reports.
+An AI-powered deep research assistant that searches the web, academic literature, and recent news, then synthesizes the collected information into structured, well-cited research reports.
 
-![Next.js](https://img.shields.io/badge/Next.js-15.4-black?logo=next.js)
-![React](https://img.shields.io/badge/React-19.1-blue?logo=react)
+The application combines multi-source research, AI-powered synthesis, persistent research conversations, authentication, and report export into a single interface.
+
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
 ![Mastra](https://img.shields.io/badge/Mastra-0.23-purple)
-![MongoDB](https://img.shields.io/badge/MongoDB-6.20-green?logo=mongodb)
+![MongoDB](https://img.shields.io/badge/MongoDB-6-green?logo=mongodb)
+![Gemini](https://img.shields.io/badge/Gemini-3.5%20Flash--Lite-4285F4?logo=google)
 
-## ✨ Features
+---
 
-### 🔬 Intelligent Research
-- **Multi-Source Search**: Integrates Google Search, Google Scholar, Google News, Bing via SerpAPI
-- **Academic Focus**: Prioritizes peer-reviewed papers and scholarly articles
-- **AI Synthesis**: Uses Perplexity AI for content synthesis when needed
-- **Smart Citations**: Automatically generates numbered citations [1], [2], [3]
-- **Quality Control**: Enforces 10-15 reference limit for focused research
+## Demo
 
-### 🤖 Multi-Agent Architecture
-- **Master Agent**: Orchestrates and routes requests intelligently
-- **Research Agent**: Conducts deep research with multiple tools
-- **Draft Agent**: Modifies reports (IEEE, APA, MLA format conversion)
-- **Context-Aware**: Maintains conversation memory with vector embeddings
+### Research Assistant
 
-### 📝 Report Generation
-- **Adaptive Structure**: Sections adapt to research type (technical, experimental, theoretical)
-- **Comprehensive**: 1500-2500 word reports with detailed analysis
-- **Professional**: Academic-style with abstracts, sections, conclusions
-- **Multiple Formats**: Export to PDF, HTML, Markdown
+![Research Assistant UI](docs/images/ui.png)
 
-### 🔐 Authentication & Security
-- **JWT Authentication**: Secure 7-day token expiration
-- **Password Hashing**: bcrypt with 10 rounds
-- **Protected Routes**: Frontend and backend route protection
-- **User Isolation**: All data scoped to authenticated users
+### Generated Research Report
 
-### 💾 Data Persistence
-- **MongoDB**: Stores users, chats, messages, reports
-- **Session Management**: Browse and resume previous research sessions
-- **Auto-Titling**: Generates descriptive titles from first message
-- **Vector Memory**: LibSQL/Turso for semantic recall (optional)
+![Generated Research Report](docs/images/result.png)
 
-## 🏗️ Architecture
+### Research in Progress
 
+![Research in Progress](docs/images/search.png)
+
+---
+
+## Demo Video
+
+A short walkthrough of the complete research workflow will be added here.
+
+> Demo video: Coming soon
+
+---
+
+## Overview
+
+Traditional research often requires manually switching between search engines, academic databases, news websites, note-taking tools, and document editors.
+
+This project combines those steps into a single AI-assisted research workflow.
+
+A user enters a research question, and the system:
+
+1. Searches the web for general information.
+2. Searches Google Scholar for academic literature.
+3. Searches Google News for recent developments.
+4. Collects and evaluates the retrieved information.
+5. Uses Gemini 3.5 Flash-Lite to synthesize the findings.
+6. Generates a structured report with numbered citations and references.
+7. Allows the generated report to be exported into supported formats.
+
+---
+
+## Key Features
+
+### Multi-Source Research
+
+The Research Agent can gather information from multiple sources:
+
+- Google Search for general web information
+- Google Scholar for academic papers and scholarly sources
+- Google News for recent developments
+- Additional search and fallback integrations available in the project
+
+This allows the system to combine general, academic, and recent information instead of relying on a single source.
+
+### AI-Powered Research Synthesis
+
+Retrieved research is passed to **Gemini 3.5 Flash-Lite** for synthesis.
+
+The system can generate structured reports containing sections such as:
+
+- Abstract
+- Introduction
+- Background or related work
+- Technical analysis
+- Applications
+- Challenges and limitations
+- Future directions
+- Conclusion
+- References
+
+The report structure can adapt to the type of research being performed.
+
+### Academic-Oriented Research
+
+For research topics that benefit from academic literature, the Research Agent uses Google Scholar to retrieve papers and publication information.
+
+Generated reports use numbered citations such as:
+
+```text
+[1], [2], [3]
+````
+
+The references section includes source information and URLs so users can trace the research material.
+
+### Persistent Research Conversations
+
+Users can:
+
+* Create research conversations
+* Continue previous research
+* Browse previous chat sessions
+* Resume earlier research
+* Maintain user-specific research data
+
+### Authentication
+
+The application includes:
+
+* User registration
+* User login
+* JWT-based authentication
+* Password hashing
+* Protected API routes
+* User-specific data isolation
+
+### Report Export
+
+Generated research can be exported into supported formats including:
+
+* PDF
+* HTML
+* Markdown
+
+### Adaptive Report Structure
+
+The generated report structure can adapt to different research types.
+
+For example:
+
+#### Technical Research
+
+```text
+Abstract
+Introduction
+Related Work
+Architecture
+Implementation
+Evaluation
+Conclusion
+References
 ```
-Frontend (Next.js 15)
-    ↓
-Authentication Middleware (JWT)
-    ↓
-API Routes (Next.js)
-    ↓
-Mastra Agents (Master → Research/Draft)
-    ↓
-External Services (Gemini, SerpAPI, Perplexity, MongoDB)
+
+#### Review / Survey Research
+
+```text
+Abstract
+Introduction
+Background
+Current State
+Trends and Developments
+Challenges
+Future Directions
+Conclusion
+References
 ```
 
-## 🚀 Getting Started
+---
+
+## Example Research Query
+
+```text
+What are the latest advancements in computer vision for autonomous vehicles?
+```
+
+A generated report for this topic can cover areas such as:
+
+* Vision Transformers
+* Spatiotemporal modeling
+* Bird's-Eye-View (BEV) representations
+* Sensor fusion
+* End-to-end autonomous driving
+* Self-supervised learning
+* Foundation models
+* Synthetic data
+* Edge AI
+* Safety and generalization challenges
+
+---
+
+## Architecture
+
+The current research workflow uses the Research Agent directly from the research API.
+
+```text
+                         ┌──────────────────────┐
+                         │        User          │
+                         │  Research Question   │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Next.js Frontend   │
+                         │   Research Chat UI   │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │    Research API      │
+                         │   Next.js API Route  │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Research Agent     │
+                         │       Mastra         │
+                         └──────────┬───────────┘
+                                    │
+                 ┌──────────────────┼──────────────────┐
+                 │                  │                  │
+                 ▼                  ▼                  ▼
+        ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+        │ Google Search  │ │ Google Scholar │ │   Google News  │
+        │    SerpAPI     │ │    SerpAPI     │ │    SerpAPI     │
+        └────────────────┘ └────────────────┘ └────────────────┘
+                 │                  │                  │
+                 └──────────────────┼──────────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ Gemini 3.5 Flash-Lite│
+                         │    AI Synthesis      │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ Structured Research  │
+                         │       Report         │
+                         └──────────┬───────────┘
+                                    │
+                       ┌────────────┼────────────┐
+                       │            │            │
+                       ▼            ▼            ▼
+                     PDF          HTML       Markdown
+```
+
+### Agent Architecture
+
+The project also contains additional Mastra agents for other research-related workflows:
+
+```text
+Mastra
+├── Master Agent
+├── Research Agent
+├── Draft Agent
+└── Export Agent
+```
+
+The current `/api/research` endpoint uses the **Research Agent directly** so that the core research workflow remains deterministic and focused.
+
+---
+
+## Research Workflow
+
+### 1. User Query
+
+The user enters a research question in the web interface.
+
+Example:
+
+```text
+What are the latest advancements in computer vision for autonomous vehicles?
+```
+
+### 2. Web Search
+
+The Research Agent uses Google Search to collect general information and relevant web sources.
+
+### 3. Academic Search
+
+Google Scholar is used to retrieve relevant academic papers, publication information, abstracts, and citation data.
+
+### 4. Recent Information
+
+Google News is used to retrieve recent developments when current information is relevant to the topic.
+
+### 5. Source Evaluation
+
+The agent evaluates the collected information and selects useful sources for synthesis.
+
+### 6. AI Synthesis
+
+Gemini 3.5 Flash-Lite analyzes the retrieved information and generates a structured research report.
+
+### 7. Citation Generation
+
+The generated report includes numbered citations and a references section containing source details and URLs.
+
+### 8. Export
+
+The completed report can be exported into supported document formats.
+
+---
+
+## Tech Stack
+
+### Frontend
+
+* Next.js 15
+* React 19
+* TypeScript
+* Tailwind CSS
+* Radix UI / shadcn-style UI components
+
+### Backend
+
+* Next.js API Routes
+* Mastra
+* MongoDB
+* JWT Authentication
+* bcrypt
+
+### AI
+
+* Gemini 3.5 Flash-Lite
+* AI SDK
+* Mastra Agent framework
+* Google embedding infrastructure for semantic memory
+
+### Search and Research
+
+* SerpAPI
+* Google Search
+* Google Scholar
+* Google News
+* Perplexity AI fallback integration
+
+### Export
+
+* jsPDF
+* Markdown processing
+* HTML generation
+
+---
+
+## Project Structure
+
+```text
+Intelligent-Research-Assistant/
+│
+├── app/
+│   ├── api/
+│   │   ├── auth/
+│   │   ├── chats/
+│   │   ├── research/
+│   │   ├── reports/
+│   │   └── export/
+│   │
+│   ├── auth/
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   ├── auth/
+│   ├── chat/
+│   └── ui/
+│
+├── lib/
+│   ├── mastra/
+│   │   ├── agents/
+│   │   │   ├── master-agent.ts
+│   │   │   ├── research-agent.ts
+│   │   │   ├── draft-agent.ts
+│   │   │   └── export-agent.ts
+│   │   │
+│   │   ├── index.ts
+│   │   ├── mcp.ts
+│   │   └── serpapi-tool.ts
+│   │
+│   ├── services/
+│   ├── contexts/
+│   ├── hooks/
+│   └── export-utils.ts
+│
+├── docs/
+│   ├── images/
+│   └── project documentation
+│
+├── types/
+├── public/
+├── package.json
+└── README.md
+```
+
+---
+
+## Screenshots
+
+### Technical Research Content
+
+![Technical Research Content](docs/images/research-pages.png)
+
+### References and Sources
+
+![References](docs/images/references.png)
+
+### PDF Export
+
+![PDF Export](docs/images/pdf-export.png)
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+ 
-- MongoDB instance (local or Atlas)
-- API Keys (see Environment Variables)
+Make sure the following are installed:
 
-### Installation
+* Node.js 20+
+* npm
+* MongoDB
+* Google AI API key
+* SerpAPI API key
 
-1. **Clone the repository**
+Optional integrations:
+
+* Perplexity API key
+* Turso credentials
+
+---
+
+## Installation
+
+### 1. Clone the Repository
+
 ```bash
-git clone <your-repo-url>
-cd ai-research-assistant
+git clone https://github.com/mohtashim009/Intelligent-Research-Assistant.git
+cd Intelligent-Research-Assistant
 ```
 
-2. **Install dependencies**
+### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**
+### 3. Configure Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the project root.
+
+Example:
 
 ```env
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/research-assistant
-# or MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/research-assistant
 
-# JWT Secret (generate a random string)
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+# JWT
+JWT_SECRET=your-secret-key
 
-# Google AI (Gemini)
+# Google AI / Gemini
 GOOGLE_GENERATIVE_AI_API_KEY=your-google-api-key
 
-# SerpAPI (for Google Search, Scholar, News)
-SERPAPI_API_KEY=your-serpapi-key
+# SerpAPI
+SERPAPI_API_KEY=your-serpapi-api-key
 
-# Perplexity AI (optional, for content synthesis)
+# Optional fallback integration
 PERPLEXITY_API_KEY=your-perplexity-api-key
 
-# Vector Memory (optional, for semantic recall)
-# Local development uses file:./mastra-memory.db by default
-# For production (Vercel), use Turso:
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-turso-token
+# Optional semantic memory / Turso
+TURSO_DATABASE_URL=your-turso-database-url
+TURSO_AUTH_TOKEN=your-turso-auth-token
 ```
 
-4. **Run the development server**
+> Never commit `.env.local` or expose API keys publicly.
+
+---
+
+## Run the Application
+
+Start the development server:
+
 ```bash
 npm run dev
 ```
 
-5. **Open your browser**
+Open:
 
-Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🔑 Getting API Keys
-
-### Required APIs
-
-1. **Google AI (Gemini)** - Free tier available
-   - Visit: [https://ai.google.dev](https://ai.google.dev)
-   - Get API key from Google AI Studio
-   - Used for: AI agent responses
-   - **Free Tier Limits**: 10 requests/minute, 1500 requests/day
-   - **Note**: If you hit quota limits, wait 1 minute or upgrade to paid tier
-
-2. **SerpAPI** - 100 free searches/month
-   - Visit: [https://serpapi.com](https://serpapi.com)
-   - Sign up and get API key
-   - Used for: Google Search, Scholar, News
-
-3. **MongoDB** - Free tier (Atlas) available
-   - Visit: [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-   - Create cluster and get connection string
-   - Used for: User data, chats, messages
-
-### Optional APIs
-
-4. **Perplexity AI** - For enhanced content synthesis
-   - Visit: [https://www.perplexity.ai](https://www.perplexity.ai)
-   - Get API key from account settings
-   - Used for: Fallback content synthesis
-
-5. **Turso (LibSQL)** - For vector memory in production
-   - Visit: [https://turso.tech](https://turso.tech)
-   - Create database and get credentials
-   - Used for: Semantic memory (optional)
-
-## 📖 Usage
-
-### Basic Research Flow
-
-1. **Register/Login**: Create an account or sign in
-2. **Ask a Question**: Type your research query
-3. **AI Research**: System searches multiple sources automatically
-4. **Get Report**: Receive comprehensive, cited research report
-5. **Modify**: Convert format (IEEE, APA) or add sections
-6. **Export**: Download as PDF, HTML, or Markdown
-
-### Example Queries
-
-```
-"Research quantum computing applications in cryptography"
-"Tell me about recent developments in AI safety"
-"What are the latest trends in renewable energy?"
+```text
+http://localhost:3000
 ```
 
-### Modifying Reports
+---
 
-```
-"Convert this report to IEEE format"
-"Add a section about implementation challenges"
-"Change to APA citation style"
-```
+## Production Build
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Next.js 15** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS 4** - Styling
-- **Radix UI** - Component library (shadcn/ui)
-
-### Backend
-- **Next.js API Routes** - Serverless functions
-- **Mastra** - Multi-agent orchestration
-- **MongoDB** - Database
-- **JWT** - Authentication
-
-### AI & Search
-- **Google Gemini 2.5 Flash** - AI model
-- **SerpAPI** - Search APIs (Google, Scholar, News)
-- **Perplexity AI** - Content synthesis
-- **Google Embeddings** - Vector embeddings
-
-### Export
-- **jsPDF** - PDF generation
-- **remark/rehype** - Markdown processing
-
-## 📁 Project Structure
-
-```
-├── app/                      # Next.js App Router
-│   ├── api/                  # API routes
-│   │   ├── auth/            # Authentication endpoints
-│   │   ├── chats/           # Chat session endpoints
-│   │   ├── research/        # Research endpoint
-│   │   └── reports/         # Report endpoints
-│   ├── auth/                # Auth pages
-│   └── layout.tsx           # Root layout
-├── components/              # React components
-│   ├── auth/               # Auth components
-│   ├── chat/               # Chat interface
-│   └── ui/                 # UI components
-├── lib/                    # Utilities and services
-│   ├── mastra/            # Mastra agents
-│   │   ├── agents/        # AI agents
-│   │   │   ├── master-agent.ts
-│   │   │   ├── research-agent.ts
-│   │   │   └── draft-agent.ts
-│   │   ├── index.ts       # Mastra configuration
-│   │   └── serpapi-tool.ts
-│   ├── services/          # Business logic
-│   ├── contexts/          # React contexts
-│   ├── hooks/             # Custom hooks
-│   └── export-utils.ts    # Export utilities
-├── types/                 # TypeScript types
-└── docs/                  # Documentation
-```
-
-## 🧪 Testing
+Create a production build:
 
 ```bash
-# Run linter
-npm run lint
-
-# Build for production
 npm run build
+```
 
-# Start production server
+Start the production server:
+
+```bash
 npm start
 ```
 
-## 🚢 Deployment
+---
 
-### Vercel (Recommended)
+## Environment Variables
 
-1. Push your code to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy
+| Variable                       | Required | Purpose                       |
+| ------------------------------ | -------- | ----------------------------- |
+| `MONGODB_URI`                  | Yes      | MongoDB connection            |
+| `JWT_SECRET`                   | Yes      | JWT authentication            |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Yes      | Gemini model access           |
+| `SERPAPI_API_KEY`              | Yes      | Web, Scholar, and News search |
+| `PERPLEXITY_API_KEY`           | Optional | Fallback research integration |
+| `TURSO_DATABASE_URL`           | Optional | Remote semantic memory        |
+| `TURSO_AUTH_TOKEN`             | Optional | Turso authentication          |
 
-### Environment Variables for Production
+---
 
-Make sure to set all required environment variables in your deployment platform:
-- `MONGODB_URI`
-- `JWT_SECRET`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
-- `SERPAPI_API_KEY`
-- `PERPLEXITY_API_KEY` (optional)
-- `TURSO_DATABASE_URL` (optional)
-- `TURSO_AUTH_TOKEN` (optional)
+## API Endpoints
 
-## 📚 Documentation
+### Authentication
 
-For detailed documentation, see:
-- [Project Documentation](docs/PROJECT_DOCUMENTATION.md) - Complete system overview
-- [Authentication Guide](docs/AUTHENTICATION_GUIDE.md) - Auth implementation
-- [Chat Persistence Guide](docs/CHAT_PERSISTENCE_GUIDE.md) - Session management
-- [Multi-Agent Architecture](docs/MULTI_AGENT_ARCHITECTURE.md) - Agent system
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+```
 
-## 🤝 Contributing
+### Chats
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```text
+GET  /api/chats
+POST /api/chats
+GET  /api/chats/:chatId
+POST /api/chats/:chatId/messages
+```
 
-## 📄 License
+### Research
+
+```text
+POST /api/research
+```
+
+### Reports
+
+```text
+GET /api/reports
+GET /api/reports/:reportId
+```
+
+### Export
+
+```text
+POST /api/export/enhance
+```
+
+---
+
+## Example Usage
+
+### Research
+
+```text
+What are the latest advancements in computer vision for autonomous vehicles?
+```
+
+### Other Examples
+
+```text
+Research quantum computing applications in cryptography.
+```
+
+```text
+What are the latest developments in AI safety?
+```
+
+```text
+Explain recent advances in renewable energy storage.
+```
+
+---
+
+## Report Output
+
+Generated reports can contain sections such as:
+
+```text
+Title
+Abstract
+Introduction
+Background / Related Work
+Technical Analysis
+Applications
+Challenges and Limitations
+Future Directions
+Conclusion
+References
+```
+
+The exact structure can adapt to the research topic.
+
+---
+
+## Security
+
+The application includes:
+
+* JWT-based authentication
+* Password hashing using bcrypt
+* Protected API routes
+* User-specific data isolation
+* Server-side API key usage
+* MongoDB persistence
+* Environment-based secret configuration
+
+---
+
+## Development Commands
+
+### Development
+
+```bash
+npm run dev
+```
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Production Start
+
+```bash
+npm start
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+---
+
+## Documentation
+
+Additional project documentation is available in the `docs/` directory.
+
+Useful documentation includes:
+
+* Project documentation
+* Authentication guide
+* Chat persistence guide
+* Multi-agent architecture
+* Semantic memory setup
+* Google API setup
+
+---
+
+## Project Highlights
+
+* Multi-source AI research workflow
+* Academic literature retrieval
+* Recent news retrieval
+* AI-generated research synthesis
+* Citation-based reports
+* Persistent research conversations
+* Authentication and user isolation
+* Multiple report export formats
+* Modular Mastra agent architecture
+
+---
+
+## Future Improvements
+
+Potential future improvements include:
+
+* Streaming detailed research progress directly into the UI
+* Source credibility scoring
+* More advanced source ranking
+* Improved citation verification
+* Additional academic databases
+* Richer research visualizations
+* More report export formats
+* Expanded agent orchestration workflows
+* Production observability and monitoring
+
+---
+
+## Acknowledgments
+
+This project uses and builds on several technologies and services:
+
+* [Next.js](https://nextjs.org/)
+* [React](https://react.dev/)
+* [Mastra](https://mastra.ai/)
+* [Google AI](https://ai.google.dev/)
+* [SerpAPI](https://serpapi.com/)
+* [MongoDB](https://www.mongodb.com/)
+* [Perplexity AI](https://www.perplexity.ai/)
+
+---
+
+## License
 
 This project is licensed under the MIT License.
 
-## 🙏 Acknowledgments
+---
 
-- [Mastra](https://mastra.ai) - Multi-agent framework
-- [Next.js](https://nextjs.org) - React framework
-- [Google AI](https://ai.google.dev) - Gemini models
-- [SerpAPI](https://serpapi.com) - Search APIs
-- [Perplexity AI](https://www.perplexity.ai) - AI synthesis
+## Author
 
-## 📧 Support
+**Mohtashim**
 
-For issues and questions, please open an issue on GitHub.
+GitHub:
+
+[https://github.com/mohtashim009](https://github.com/mohtashim009)
+
+Project Repository:
+
+[https://github.com/mohtashim009/Intelligent-Research-Assistant](https://github.com/mohtashim009/Intelligent-Research-Assistant)
